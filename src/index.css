@@ -1,68 +1,57 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: deutschshikhi --default;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* ===== Custom Theme ===== */
+@theme {
+  /* Fonts */
+  --font-inter: "Inter", sans-serif;
+  --font-bangla: "Hind Siliguri", sans-serif;
+
+  /* DeutschShikhi Colors */
+  --color-ds-bg: #01161e;
+  --color-ds-surface: #124559;
+  --color-ds-border: #598392;
+  --color-ds-muted: #aec3b0;
+  --color-ds-text: #eff6e0;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+/* ===== DaisyUI Theme ===== */
+@plugin "daisyui/theme" {
+  name: "deutschshikhi";
+  default: true;
+
+  --color-base-100: #01161e;
+  --color-base-200: #124559;
+  --color-base-300: #598392;
+  --color-base-content: #eff6e0;
+
+  --color-primary: #124559;
+  --color-primary-content: #eff6e0;
+
+  --color-secondary: #598392;
+  --color-secondary-content: #eff6e0;
+
+  --color-accent: #aec3b0;
+  --color-accent-content: #01161e;
+
+  --color-neutral: #124559;
+  --color-neutral-content: #eff6e0;
+
+  --color-info: #598392;
+  --color-success: #aec3b0;
+  --color-warning: #aec3b0;
+  --color-error: #598392;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* ===== Utility Classes ===== */
+.font-inter {
+  font-family: var(--font-inter);
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.font-bangla {
+  font-family: var(--font-bangla);
 }

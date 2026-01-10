@@ -8,7 +8,7 @@ import loginSvg from "../../assets/login.svg";
 import { AuthContext } from "../../context/AuthContext";
 
 const Login = () => {
-  const { signIn, googleSignIn } = useContext(AuthContext);
+  const { signInUser, signInWithGoogle } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
@@ -26,7 +26,7 @@ const Login = () => {
     const password = form.password.value;
 
     try {
-      await signIn(email, password);
+      await signInUser(email, password);
       toast.success("Welcome back!");
       navigate(from, { replace: true });
     } catch (error) {
@@ -46,7 +46,7 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      await googleSignIn();
+      await signInWithGoogle();
       toast.success("Welcome!");
       navigate(from, { replace: true });
     } catch (error) {

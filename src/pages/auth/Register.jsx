@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
+import { sendEmailVerification } from "firebase/auth";
 import {
   HiOutlineMail,
   HiOutlineLockClosed,
@@ -11,18 +12,23 @@ import {
   HiOutlineCheck,
   HiOutlineArrowRight,
   HiOutlineArrowLeft,
+  HiOutlineX,
 } from "react-icons/hi";
 import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
+import registerSvg from "../../assets/register.svg";
+import auth from "../../firebase/firebase.init";
 
 const Register = () => {
-  const { createUser, updateUserProfile, googleSignIn } = useContext(AuthContext);
+  const { createUser, updateUserProfile, signInWithGoogle } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -33,21 +39,80 @@ const Register = () => {
     confirmPassword: "",
   });
 
-  // Password strength
-  const getPasswordStrength = (password) => {
-    let strength = 0;
-    if (password.length >= 6) strength++;
-    if (password.length >= 8) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^A-Za-z0-9]/.test(password)) strength++;
-    return strength;
-  };
+  // ImgBB API Key from environment variable
+  const IMGBB_API_KEY = import.meta.env.VITE_IMGBB_API_KEY;
 
-  const passwordStrength = getPasswordStrength(formData.password);
+  // Password validation rules
+  const passwordRules = [
+    { label: "At least 6 characters", test: (p) => p.length >= 6 },
+    { label: "One uppercase letter (A-Z)", test: (p) => /[A-Z]/.test(p) },
+    { label: "One lowercase letter (a-z)", test: (p) => /[a-z]/.test(p) },
+    { label: "One number (0-9)", test: (p) => /[0-9]/.test(p) },
+    {
+      label: "One special character (!@#$%^&*)",
+      test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p),
+    },
+  ];
+
+  // Check which rules pass
+  const passedRules = passwordRules.filter((rule) => rule.test(formData.password));
+  const passwordStrength = passedRules.length;
+  const isPasswordValid = passwordStrength === passwordRules.length;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handle Image Upload to ImgBB
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a valid image (JPG, PNG, GIF, WEBP)");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+
+    setImageUploading(true);
+
+    try {
+      const formDataImg = new FormData();
+      formDataImg.append("image", file);
+
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST",
+        body: formDataImg,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setFormData({ ...formData, photoURL: data.data.display_url });
+        setImagePreview(data.data.display_url);
+        toast.success("Image uploaded successfully!");
+      } else {
+        toast.error("Image upload failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast.error("Image upload failed. Please try again.");
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  // Remove uploaded image
+  const handleRemoveImage = () => {
+    setFormData({ ...formData, photoURL: "" });
+    setImagePreview(null);
   };
 
   const handleNextStep = () => {
@@ -71,13 +136,13 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords don't match");
+    if (!isPasswordValid) {
+      toast.error("Password doesn't meet all requirements");
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords don't match");
       return;
     }
 
@@ -85,13 +150,16 @@ const Register = () => {
 
     try {
       // Create user
-      await createUser(formData.email, formData.password);
+      const result = await createUser(formData.email, formData.password);
 
       // Update profile
       await updateUserProfile(formData.name, formData.photoURL);
 
-      toast.success("Account created successfully!");
-      navigate("/");
+      // Send email verification
+      await sendEmailVerification(result.user);
+
+      toast.success("Account created! Please check your email to verify.");
+      navigate("/verify-email");
     } catch (error) {
       console.error(error);
       if (error.code === "auth/email-already-in-use") {
@@ -108,7 +176,7 @@ const Register = () => {
   const handleGoogleRegister = async () => {
     setLoading(true);
     try {
-      await googleSignIn();
+      await signInWithGoogle();
       toast.success("Welcome to DeutschShikhi!");
       navigate("/");
     } catch (error) {
@@ -240,41 +308,82 @@ const Register = () => {
                   </div>
                 </div>
 
-                {/* Photo URL Field (Optional) */}
+                {/* Photo Upload Field */}
                 <div className="relative">
                   <label className="block text-ds-muted text-sm mb-2">
-                    Photo URL <span className="text-ds-border">(optional)</span>
+                    Profile Photo <span className="text-ds-border">(optional)</span>
                   </label>
-                  <div
-                    className={`relative rounded-xl border-2 transition-all duration-300 ${
-                      focusedField === "photoURL"
-                        ? "border-ds-muted shadow-lg shadow-ds-muted/10"
-                        : "border-ds-border/30"
-                    }`}
-                  >
-                    <HiOutlinePhotograph
-                      className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${
-                        focusedField === "photoURL" ? "text-ds-muted" : "text-ds-border"
+
+                  {/* Image Preview */}
+                  {imagePreview ? (
+                    <div className="relative inline-block mb-3">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-20 h-20 rounded-xl object-cover border-2 border-ds-border/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      >
+                        <HiOutlineX className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      className={`relative rounded-xl border-2 border-dashed transition-all duration-300 ${
+                        focusedField === "photo" ? "border-ds-muted bg-ds-muted/5" : "border-ds-border/30"
                       }`}
-                    />
-                    <input
-                      type="url"
-                      name="photoURL"
-                      value={formData.photoURL}
-                      onChange={handleChange}
-                      placeholder="https://example.com/photo.jpg"
-                      onFocus={() => setFocusedField("photoURL")}
-                      onBlur={() => setFocusedField(null)}
-                      className="w-full bg-transparent py-4 pl-12 pr-4 text-ds-text placeholder:text-ds-border focus:outline-none"
-                    />
-                  </div>
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        onFocus={() => setFocusedField("photo")}
+                        onBlur={() => setFocusedField(null)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={imageUploading}
+                      />
+                      <div className="py-6 px-4 text-center">
+                        {imageUploading ? (
+                          <div className="flex items-center justify-center gap-2 text-ds-muted">
+                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                fill="none"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            <span>Uploading...</span>
+                          </div>
+                        ) : (
+                          <>
+                            <HiOutlinePhotograph className="w-8 h-8 mx-auto text-ds-border mb-2" />
+                            <p className="text-ds-muted text-sm">Click or drag to upload image</p>
+                            <p className="text-ds-border text-xs mt-1">JPG, PNG, GIF, WEBP (max 5MB)</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Next Button */}
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="group w-full py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-ds-muted/20 transition-all"
+                  disabled={imageUploading}
+                  className="group w-full py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-ds-muted/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue
                   <HiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -324,32 +433,74 @@ const Register = () => {
                     </button>
                   </div>
 
-                  {/* Password Strength */}
+                  {/* Password Strength & Rules */}
                   {formData.password && (
-                    <div className="mt-3">
-                      <div className="flex gap-1 mb-2">
-                        {[1, 2, 3, 4, 5].map((level) => (
-                          <div
-                            key={level}
-                            className={`h-1 flex-1 rounded-full transition-all ${
-                              passwordStrength >= level
-                                ? passwordStrength <= 2
-                                  ? "bg-red-400"
-                                  : passwordStrength <= 3
-                                  ? "bg-yellow-400"
-                                  : "bg-green-400"
-                                : "bg-ds-border/30"
+                    <div className="mt-4 space-y-3">
+                      {/* Strength Bar */}
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs text-ds-muted">Password Strength</span>
+                          <span
+                            className={`text-xs font-medium ${
+                              passwordStrength <= 2
+                                ? "text-red-400"
+                                : passwordStrength <= 3
+                                ? "text-yellow-400"
+                                : passwordStrength <= 4
+                                ? "text-blue-400"
+                                : "text-green-400"
                             }`}
-                          ></div>
-                        ))}
+                          >
+                            {passwordStrength <= 2
+                              ? "Weak"
+                              : passwordStrength <= 3
+                              ? "Fair"
+                              : passwordStrength <= 4
+                              ? "Good"
+                              : "Strong"}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((level) => (
+                            <div
+                              key={level}
+                              className={`h-1.5 flex-1 rounded-full transition-all ${
+                                passwordStrength >= level
+                                  ? passwordStrength <= 2
+                                    ? "bg-red-400"
+                                    : passwordStrength <= 3
+                                    ? "bg-yellow-400"
+                                    : passwordStrength <= 4
+                                    ? "bg-blue-400"
+                                    : "bg-green-400"
+                                  : "bg-ds-border/30"
+                              }`}
+                            ></div>
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-xs text-ds-muted">
-                        {passwordStrength <= 2
-                          ? "Weak password"
-                          : passwordStrength <= 3
-                          ? "Good password"
-                          : "Strong password"}
-                      </p>
+
+                      {/* Validation Checklist */}
+                      <div className="bg-ds-surface/30 rounded-xl p-4 space-y-2">
+                        {passwordRules.map((rule, index) => {
+                          const passed = rule.test(formData.password);
+                          return (
+                            <div
+                              key={index}
+                              className={`flex items-center gap-2 text-sm transition-all ${
+                                passed ? "text-green-400" : "text-ds-muted"
+                              }`}
+                            >
+                              {passed ? (
+                                <HiOutlineCheck className="w-4 h-4 flex-shrink-0" />
+                              ) : (
+                                <div className="w-4 h-4 rounded-full border border-ds-border/50 flex-shrink-0"></div>
+                              )}
+                              <span className={passed ? "line-through opacity-70" : ""}>{rule.label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -466,28 +617,30 @@ const Register = () => {
         </div>
       </div>
 
-      {/* Right Side - Decorative */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-ds-surface/50 to-ds-bg relative overflow-hidden items-center justify-center">
+      {/* Right Side - Illustration */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-ds-surface/40 to-ds-bg relative overflow-hidden items-center justify-center">
         {/* Gradient Orbs */}
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-ds-muted/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-ds-border/10 rounded-full blur-3xl"></div>
 
         {/* Content */}
         <div className="relative z-10 text-center px-12">
-          {/* Illustration / Stats */}
-          <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-ds-bg/50 backdrop-blur border border-ds-border/30 mb-6">
-              <span className="text-6xl">🚀</span>
-            </div>
+          {/* SVG Illustration */}
+          <div className="mb-10">
+            <img
+              src={registerSvg}
+              alt="Register illustration"
+              className="w-80 h-80 mx-auto drop-shadow-2xl"
+            />
           </div>
 
-          <h2 className="text-3xl font-bold text-ds-text mb-4">Join Our Community</h2>
-          <p className="text-ds-muted mb-8 max-w-sm mx-auto">
-            Learn German with thousands of Bengali speakers worldwide.
-          </p>
+          {/* Text */}
+          <h2 className="text-3xl font-bold text-ds-text mb-3">Join DeutschShikhi</h2>
+          <p className="text-ds-muted mb-2">Start your German learning journey</p>
+          <p className="text-ds-muted font-bangla">আজই জার্মান শেখা শুরু করুন</p>
 
           {/* Features List */}
-          <div className="space-y-4 text-left max-w-xs mx-auto">
+          <div className="mt-10 space-y-4 text-left max-w-xs mx-auto">
             {[
               { icon: "🎯", text: "Structured A1-A2 curriculum" },
               { icon: "🔊", text: "Native German pronunciation" },

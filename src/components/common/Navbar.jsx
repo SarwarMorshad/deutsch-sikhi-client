@@ -66,9 +66,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-ds-text">
-              Deutsch<span className="text-ds-muted">Shikhi</span>
-            </span>
+            <img src="/logo.png" alt="DEUTSCH শিখি Logo" className="w-[256px] h-[171px]" />
           </Link>
 
           {/* Desktop Navigation */}

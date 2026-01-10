@@ -4,6 +4,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { sendEmailVerification } from "firebase/auth";
 import { HiOutlineMail, HiOutlineRefresh, HiOutlineCheckCircle, HiOutlineLogout } from "react-icons/hi";
 import toast from "react-hot-toast";
+import { authAPI } from "../../utils/api";
 
 const VerifyEmail = () => {
   const { user, logOut } = useContext(AuthContext);
@@ -52,8 +53,23 @@ const VerifyEmail = () => {
     if (user) {
       await user.reload();
       if (user.emailVerified) {
-        toast.success("Email verified successfully!");
-        navigate("/");
+        try {
+          // Save user to database
+          await authAPI.register({
+            name: user.displayName || "",
+            photoURL: user.photoURL || "",
+          });
+          toast.success("Email verified successfully!");
+          navigate("/");
+        } catch (error) {
+          // If user already exists, that's fine
+          const errorMsg = error.response?.data?.message || error.message;
+          if (errorMsg !== "User already registered.") {
+            console.error("Error saving user:", errorMsg);
+          }
+          toast.success("Email verified successfully!");
+          navigate("/");
+        }
       } else {
         toast.error("Email not verified yet. Please check your inbox.");
       }

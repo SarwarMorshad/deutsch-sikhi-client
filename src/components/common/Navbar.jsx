@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-
+import { AuthContext } from "../../context/AuthContext";
 import {
   HiOutlineMenuAlt3,
   HiOutlineX,
@@ -15,7 +15,6 @@ import {
   HiOutlineChartBar,
   HiOutlineCog,
 } from "react-icons/hi";
-import { AuthContext } from "../../context/AuthContext";
 
 const Navbar = () => {
   const { user, logOut } = useContext(AuthContext);
@@ -66,7 +65,9 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="DEUTSCH শিখি Logo" className="w-[256px] h-[171px]" />
+            <span className="text-2xl font-bold text-ds-text">
+              Deutsch<span className="text-ds-muted">Shikhi</span>
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

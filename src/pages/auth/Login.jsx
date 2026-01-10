@@ -5,6 +5,7 @@ import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff } fro
 import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 import loginSvg from "../../assets/login.svg";
+import { authAPI } from "../../utils/api";
 import { AuthContext } from "../../context/AuthContext";
 
 const Login = () => {
@@ -46,7 +47,22 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const result = await signInWithGoogle();
+
+      // Save/sync user to database (creates if not exists)
+      try {
+        await authAPI.register({
+          name: result.user.displayName || "",
+          photoURL: result.user.photoURL || "",
+        });
+      } catch (error) {
+        // If user already exists, that's fine
+        const errorMsg = error.response?.data?.message || error.message;
+        if (errorMsg !== "User already registered.") {
+          console.error("Error syncing user:", errorMsg);
+        }
+      }
+
       toast.success("Welcome!");
       navigate(from, { replace: true });
     } catch (error) {

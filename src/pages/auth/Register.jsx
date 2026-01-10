@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
+
 import { sendEmailVerification } from "firebase/auth";
 import {
   HiOutlineMail,
@@ -17,7 +17,8 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 import registerSvg from "../../assets/register.svg";
-import auth from "../../firebase/firebase.init";
+import { authAPI } from "../../utils/api";
+import { AuthContext } from "../../context/AuthContext";
 
 const Register = () => {
   const { createUser, updateUserProfile, signInWithGoogle } = useContext(AuthContext);
@@ -176,7 +177,22 @@ const Register = () => {
   const handleGoogleRegister = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const result = await signInWithGoogle();
+
+      // Save user to database
+      try {
+        await authAPI.register({
+          name: result.user.displayName || "",
+          photoURL: result.user.photoURL || "",
+        });
+      } catch (error) {
+        // If user already exists, that's fine (returning user)
+        const errorMsg = error.response?.data?.message || error.message;
+        if (errorMsg !== "User already registered.") {
+          console.error("Error saving user:", errorMsg);
+        }
+      }
+
       toast.success("Welcome to DeutschShikhi!");
       navigate("/");
     } catch (error) {

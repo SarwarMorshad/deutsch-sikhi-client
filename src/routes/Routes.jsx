@@ -10,6 +10,8 @@ import Page404 from "../pages/Page404";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import VerifyEmail from "../pages/auth/VerifyEmail";
+import Courses from "../pages/public/Courses";
+import LessonDetail from "../pages/public/LessonDetail";
 
 const router = createBrowserRouter([
   {
@@ -23,7 +25,11 @@ const router = createBrowserRouter([
       },
       {
         path: "courses",
-        element: <div className="p-8 text-ds-text">Courses Page - Coming Soon</div>,
+        element: <Courses />,
+      },
+      {
+        path: "lessons/:id",
+        element: <LessonDetail />,
       },
       {
         path: "vocabulary",

@@ -42,16 +42,182 @@
   --color-neutral-content: #eff6e0;
 
   --color-info: #598392;
-  --color-success: #aec3b0;
-  --color-warning: #aec3b0;
-  --color-error: #598392;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
 }
 
-/* ===== Utility Classes ===== */
+/* ===== Font Classes ===== */
 .font-inter {
   font-family: var(--font-inter);
 }
 
 .font-bangla {
   font-family: var(--font-bangla);
+}
+
+/* ===== Base Styles ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-inter);
+  background-color: var(--color-ds-bg);
+  color: var(--color-ds-text);
+}
+
+/* ===== Custom Components ===== */
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* German flag stripe */
+.german-stripe {
+  height: 4px;
+  background: linear-gradient(to right, #000000 33.33%, #dd0000 33.33%, #dd0000 66.66%, #ffcc00 66.66%);
+}
+
+/* Level badges */
+.badge-a1 {
+  background-color: #22c55e;
+  color: #fff;
+}
+.badge-a2 {
+  background-color: #3b82f6;
+  color: #fff;
+}
+.badge-b1 {
+  background-color: #f59e0b;
+  color: #fff;
+}
+.badge-b2 {
+  background-color: #ef4444;
+  color: #fff;
+}
+
+/* Lesson status */
+.lesson-locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.lesson-unlocked {
+  cursor: pointer;
+}
+
+.lesson-completed {
+  border-left: 4px solid #4ade80;
+}
+
+/* Audio button */
+.audio-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-ds-surface);
+  color: var(--color-ds-text);
+  transition: all 0.2s ease;
+}
+.audio-btn:hover {
+  background-color: var(--color-ds-border);
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background-color: var(--color-ds-surface);
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--color-ds-border), var(--color-ds-muted));
+  transition: width 0.5s ease;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.delay-100 {
+  animation-delay: 0.1s;
+}
+.delay-200 {
+  animation-delay: 0.2s;
+}
+.delay-300 {
+  animation-delay: 0.3s;
+}
+.delay-400 {
+  animation-delay: 0.4s;
+}
+.delay-500 {
+  animation-delay: 0.5s;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-ds-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ds-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ds-muted);
 }

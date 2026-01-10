@@ -1,12 +1,12 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-
+import { AuthContext } from "../../context/AuthContext";
 import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff } from "react-icons/hi";
 import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 import loginSvg from "../../assets/login.svg";
 import { authAPI } from "../../utils/api";
-import { AuthContext } from "../../context/AuthContext";
+import axios from "axios";
 
 const Login = () => {
   const { signInUser, signInWithGoogle } = useContext(AuthContext);
@@ -18,6 +18,31 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
 
+  // Check user role and redirect accordingly
+  const handleRedirectAfterLogin = async (firebaseUser) => {
+    try {
+      const token = await firebaseUser.getIdToken();
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const dbUser = response.data.data;
+
+      // If admin, redirect to admin dashboard
+      if (dbUser?.role === "admin") {
+        toast.success("Welcome back, Admin!");
+        navigate("/admin", { replace: true });
+      } else {
+        toast.success("Welcome back!");
+        navigate(from, { replace: true });
+      }
+    } catch (error) {
+      console.error("Error checking user role:", error);
+      toast.success("Welcome back!");
+      navigate(from, { replace: true });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -27,15 +52,16 @@ const Login = () => {
     const password = form.password.value;
 
     try {
-      await signInUser(email, password);
-      toast.success("Welcome back!");
-      navigate(from, { replace: true });
+      const result = await signInUser(email, password);
+      await handleRedirectAfterLogin(result.user);
     } catch (error) {
       console.error(error);
       if (error.code === "auth/user-not-found") {
         toast.error("No account found with this email");
       } else if (error.code === "auth/wrong-password") {
         toast.error("Incorrect password");
+      } else if (error.code === "auth/invalid-credential") {
+        toast.error("Invalid email or password");
       } else {
         toast.error("Login failed. Please try again.");
       }
@@ -63,8 +89,7 @@ const Login = () => {
         }
       }
 
-      toast.success("Welcome!");
-      navigate(from, { replace: true });
+      await handleRedirectAfterLogin(result.user);
     } catch (error) {
       console.error(error);
       toast.error("Google sign-in failed");
@@ -83,17 +108,13 @@ const Login = () => {
 
         {/* Content */}
         <div className="relative z-10 text-center px-12">
-          {/* SVG Illustration */}
           <div className="mb-10">
             <img src={loginSvg} alt="Login illustration" className="w-80 h-80 mx-auto drop-shadow-2xl" />
           </div>
-
-          {/* Text */}
           <h2 className="text-3xl font-bold text-ds-text mb-3">Welcome Back!</h2>
           <p className="text-ds-muted mb-2">Continue your German learning journey</p>
           <p className="text-ds-muted font-bangla">আপনার জার্মান শেখা চালিয়ে যান</p>
 
-          {/* Stats */}
           <div className="flex justify-center gap-8 mt-10">
             <div className="text-center">
               <div className="text-2xl font-bold text-ds-text">500+</div>
@@ -111,14 +132,11 @@ const Login = () => {
             </div>
           </div>
         </div>
-
-        {/* Decorative Line */}
         <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-ds-border/30 to-transparent"></div>
       </div>
 
       {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative">
-        {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div
             className="w-full h-full"
@@ -130,24 +148,20 @@ const Login = () => {
         </div>
 
         <div className="w-full max-w-md relative z-10">
-          {/* Header */}
           <div className="mb-10">
             <Link to="/" className="inline-block mb-8">
               <span className="text-2xl font-bold text-ds-text">
                 Deutsch<span className="text-ds-muted">Shikhi</span>
               </span>
             </Link>
-
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-1 bg-gradient-to-r from-ds-muted to-ds-border rounded-full"></div>
               <span className="text-ds-muted text-sm tracking-widest uppercase">Welcome Back</span>
             </div>
-
             <h1 className="text-4xl font-black text-ds-text mb-2">Sign In</h1>
             <p className="text-ds-muted">Enter your credentials to access your account</p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div className="relative">
@@ -275,15 +289,12 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Register Link */}
           <p className="mt-8 text-center text-ds-muted">
             Don't have an account?{" "}
             <Link to="/register" className="text-ds-text font-semibold hover:underline">
               Create one
             </Link>
           </p>
-
-          {/* Language Note */}
           <p className="mt-6 text-center text-ds-border text-sm font-bangla">
             নতুন? একটি অ্যাকাউন্ট তৈরি করুন
           </p>

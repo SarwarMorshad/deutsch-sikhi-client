@@ -5,14 +5,19 @@ import useAxiosSecure from "../../hooks/useAxiosSecure";
 import {
   HiOutlineArrowLeft,
   HiOutlineVolumeUp,
+  HiOutlinePlay,
   HiOutlineBookOpen,
+  HiOutlineLightBulb,
   HiOutlinePuzzle,
+  HiOutlineChatAlt2,
+  HiOutlineClipboardCheck,
   HiOutlineCheckCircle,
   HiOutlineXCircle,
   HiOutlineArrowRight,
-  HiOutlineLightningBolt,
   HiOutlineRefresh,
   HiOutlineStar,
+  HiOutlineChevronDown,
+  HiOutlineChevronUp,
   HiOutlineAcademicCap,
 } from "react-icons/hi";
 import toast from "react-hot-toast";
@@ -23,15 +28,16 @@ const LessonDetail = () => {
   const { user } = useContext(AuthContext);
   const axiosSecure = useAxiosSecure();
 
-  // States
+  // Data states
   const [lesson, setLesson] = useState(null);
   const [words, setWords] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("words"); // words | exercises | quiz
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [showTranslation, setShowTranslation] = useState(false);
+
+  // UI states
+  const [activeSection, setActiveSection] = useState("warmup");
   const [flippedCards, setFlippedCards] = useState({});
+  const [expandedGrammar, setExpandedGrammar] = useState(true);
 
   // Quiz states
   const [quizStarted, setQuizStarted] = useState(false);
@@ -40,6 +46,16 @@ const LessonDetail = () => {
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
   const [score, setScore] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
+
+  // Sections configuration
+  const sections = [
+    { id: "warmup", label: "Warm-up", icon: HiOutlinePlay },
+    { id: "vocabulary", label: "Vocabulary", icon: HiOutlineBookOpen },
+    { id: "grammar", label: "Grammar", icon: HiOutlineLightBulb },
+    { id: "practice", label: "Practice", icon: HiOutlinePuzzle },
+    { id: "conversation", label: "Conversation", icon: HiOutlineChatAlt2 },
+    { id: "quiz", label: "Quiz", icon: HiOutlineClipboardCheck },
+  ];
 
   // Fetch lesson data
   useEffect(() => {
@@ -65,9 +81,10 @@ const LessonDetail = () => {
     fetchLesson();
   }, [id]);
 
-  // Text-to-speech for German words
-  const speakWord = (text) => {
+  // Text-to-speech
+  const speakGerman = (text) => {
     if ("speechSynthesis" in window) {
+      speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "de-DE";
       utterance.rate = 0.8;
@@ -75,12 +92,9 @@ const LessonDetail = () => {
     }
   };
 
-  // Toggle card flip
+  // Card flip toggle
   const toggleCardFlip = (wordId) => {
-    setFlippedCards((prev) => ({
-      ...prev,
-      [wordId]: !prev[wordId],
-    }));
+    setFlippedCards((prev) => ({ ...prev, [wordId]: !prev[wordId] }));
   };
 
   // Quiz functions
@@ -93,31 +107,12 @@ const LessonDetail = () => {
     setIsAnswerChecked(false);
   };
 
-  const checkAnswer = async (exerciseId, answer) => {
+  const checkAnswer = (answer) => {
     setSelectedAnswer(answer);
     setIsAnswerChecked(true);
-
-    try {
-      const response = await axiosSecure.post(`/exercises/${exerciseId}/check`, {
-        answer,
-      });
-
-      if (response.data.correct) {
-        setScore((prev) => prev + 1);
-        toast.success("Correct! 🎉");
-      } else {
-        toast.error(`Wrong! Correct answer: ${response.data.correctAnswer}`);
-      }
-    } catch (error) {
-      // Fallback local check
-      const exercise = exercises[currentQuestionIndex];
-      const isCorrect = answer === exercise.correctAnswer;
-      if (isCorrect) {
-        setScore((prev) => prev + 1);
-        toast.success("Correct! 🎉");
-      } else {
-        toast.error(`Wrong! Correct answer: ${exercise.correctAnswer}`);
-      }
+    const currentExercise = exercises[currentQuestionIndex];
+    if (answer === currentExercise?.correctAnswer) {
+      setScore((prev) => prev + 1);
     }
   };
 
@@ -133,13 +128,15 @@ const LessonDetail = () => {
 
   const completeQuiz = async () => {
     setQuizCompleted(true);
-    const finalScore = Math.round((score / exercises.length) * 100);
+    const finalScore = Math.round(
+      ((score + (selectedAnswer === exercises[currentQuestionIndex]?.correctAnswer ? 1 : 0)) /
+        exercises.length) *
+        100
+    );
 
     if (user) {
       try {
-        await axiosSecure.post(`/lessons/${id}/complete`, {
-          score: finalScore,
-        });
+        await axiosSecure.post(`/lessons/${id}/complete`, { score: finalScore });
         toast.success("Progress saved!");
       } catch (error) {
         console.error("Error saving progress:", error);
@@ -171,11 +168,21 @@ const LessonDetail = () => {
     );
   }
 
+  const finalScorePercent =
+    exercises.length > 0
+      ? Math.round(
+          ((score +
+            (isAnswerChecked && selectedAnswer === exercises[currentQuestionIndex]?.correctAnswer ? 1 : 0)) /
+            exercises.length) *
+            100
+        )
+      : 0;
+
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-6">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-ds-muted hover:text-ds-text transition-colors mb-4"
@@ -184,114 +191,224 @@ const LessonDetail = () => {
             Back to Courses
           </button>
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-ds-surface/50 to-ds-surface/30 border border-ds-border/30">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <span className="px-3 py-1 rounded-full bg-ds-surface text-ds-muted text-sm">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-medium">
                   {lesson.levelCode || "A1"}
                 </span>
                 <span className="text-ds-border">•</span>
-                <span className="text-ds-muted text-sm">Lesson {lesson.order || 1}</span>
+                <span className="text-ds-muted text-sm">Module {lesson.order || 1}</span>
               </div>
-              <h1 className="text-3xl font-bold text-ds-text mb-1">{lesson.title?.en}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-ds-text mb-1">{lesson.title?.en}</h1>
               <p className="text-ds-muted font-bangla">{lesson.title?.bn}</p>
             </div>
 
-            <div className="flex items-center gap-4 text-sm">
-              <div className="text-center px-4 py-2 bg-ds-surface/50 rounded-xl">
-                <div className="text-2xl font-bold text-ds-text">{words.length}</div>
-                <div className="text-ds-muted">Words</div>
+            <div className="flex items-center gap-3">
+              <div className="text-center px-4 py-2 bg-ds-bg/50 rounded-xl">
+                <div className="text-xl font-bold text-ds-text">{words.length}</div>
+                <div className="text-ds-muted text-xs">Words</div>
               </div>
-              <div className="text-center px-4 py-2 bg-ds-surface/50 rounded-xl">
-                <div className="text-2xl font-bold text-ds-text">{exercises.length}</div>
-                <div className="text-ds-muted">Exercises</div>
+              <div className="text-center px-4 py-2 bg-ds-bg/50 rounded-xl">
+                <div className="text-xl font-bold text-ds-text">{exercises.length}</div>
+                <div className="text-ds-muted text-xs">Questions</div>
+              </div>
+              <div className="text-center px-4 py-2 bg-ds-bg/50 rounded-xl">
+                <div className="text-xl font-bold text-ds-text">{lesson.estimatedMinutes || 30}</div>
+                <div className="text-ds-muted text-xs">Mins</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-8 p-1 bg-ds-surface/30 rounded-xl">
-          {[
-            { id: "words", label: "Words", icon: HiOutlineBookOpen },
-            { id: "exercises", label: "Quiz", icon: HiOutlinePuzzle },
-          ].map((tab) => (
+        {/* Section Navigation */}
+        <div className="flex gap-1 mb-6 p-1 bg-ds-surface/30 rounded-xl overflow-x-auto">
+          {sections.map((section) => (
             <button
-              key={tab.id}
+              key={section.id}
               onClick={() => {
-                setActiveTab(tab.id);
-                if (tab.id === "exercises") setQuizStarted(false);
+                setActiveSection(section.id);
+                if (section.id === "quiz") setQuizStarted(false);
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${
-                activeTab === tab.id ? "bg-ds-text text-ds-bg" : "text-ds-muted hover:text-ds-text"
+              className={`flex-1 min-w-[80px] flex flex-col items-center gap-1 py-3 px-2 rounded-lg font-medium transition-all ${
+                activeSection === section.id
+                  ? "bg-ds-text text-ds-bg"
+                  : "text-ds-muted hover:text-ds-text hover:bg-ds-surface/50"
               }`}
             >
-              <tab.icon className="w-5 h-5" />
-              {tab.label}
+              <section.icon className="w-5 h-5" />
+              <span className="text-xs">{section.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Words Tab */}
-        {activeTab === "words" && (
-          <div className="space-y-6">
-            {/* Word Navigation */}
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-ds-muted">Click cards to flip • Click 🔊 to hear pronunciation</p>
-              <button
-                onClick={() => setShowTranslation(!showTranslation)}
-                className="text-sm text-ds-muted hover:text-ds-text transition-colors"
-              >
-                {showTranslation ? "Hide" : "Show"} all translations
-              </button>
+        {/* ==================== SECTION 1: WARM-UP ==================== */}
+        {activeSection === "warmup" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-ds-text mb-2">🎯 Warm-up</h2>
+              <p className="text-ds-muted">Listen and read the dialogue</p>
+            </div>
+
+            {/* Dialogue Card */}
+            {lesson.warmup?.dialogue && (
+              <div className="bg-ds-surface/30 rounded-2xl p-6 border border-ds-border/30">
+                <div className="space-y-4">
+                  {lesson.warmup.dialogue.map((line, index) => (
+                    <div
+                      key={index}
+                      className={`flex gap-4 ${
+                        line.speaker === "B" ||
+                        line.speaker === "You" ||
+                        line.speaker === "Customer" ||
+                        line.speaker === "Patient" ||
+                        line.speaker === "Tourist" ||
+                        line.speaker === "Student"
+                          ? "flex-row-reverse"
+                          : ""
+                      }`}
+                    >
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                          line.speaker === "B" ||
+                          line.speaker === "You" ||
+                          line.speaker === "Customer" ||
+                          line.speaker === "Patient" ||
+                          line.speaker === "Tourist" ||
+                          line.speaker === "Student"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-blue-500/20 text-blue-400"
+                        }`}
+                      >
+                        {line.speaker.charAt(0)}
+                      </div>
+                      <div
+                        className={`flex-1 max-w-md ${
+                          line.speaker === "B" ||
+                          line.speaker === "You" ||
+                          line.speaker === "Customer" ||
+                          line.speaker === "Patient" ||
+                          line.speaker === "Tourist" ||
+                          line.speaker === "Student"
+                            ? "text-right"
+                            : ""
+                        }`}
+                      >
+                        <div
+                          className={`inline-block p-4 rounded-2xl ${
+                            line.speaker === "B" ||
+                            line.speaker === "You" ||
+                            line.speaker === "Customer" ||
+                            line.speaker === "Patient" ||
+                            line.speaker === "Tourist" ||
+                            line.speaker === "Student"
+                              ? "bg-emerald-500/20 rounded-tr-none"
+                              : "bg-ds-surface rounded-tl-none"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <p className="text-ds-text font-medium">{line.text}</p>
+                            <button
+                              onClick={() => speakGerman(line.text)}
+                              className="p-1 rounded-full hover:bg-ds-bg/50 transition-colors"
+                            >
+                              <HiOutlineVolumeUp className="w-4 h-4 text-ds-muted" />
+                            </button>
+                          </div>
+                          <p className="text-ds-muted text-sm">{line.translation?.en}</p>
+                          <p className="text-ds-border text-xs font-bangla mt-1">{line.translation?.bn}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Learning Objectives */}
+            {lesson.objectives && (
+              <div className="bg-ds-surface/20 rounded-2xl p-6 border border-ds-border/20">
+                <h3 className="text-lg font-semibold text-ds-text mb-4 flex items-center gap-2">
+                  <HiOutlineStar className="w-5 h-5 text-yellow-400" />
+                  What you'll learn
+                </h3>
+                <ul className="space-y-2">
+                  {lesson.objectives.map((obj, i) => (
+                    <li key={i} className="flex items-center gap-3 text-ds-muted">
+                      <HiOutlineCheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                      {obj}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <button
+              onClick={() => setActiveSection("vocabulary")}
+              className="w-full py-4 rounded-xl bg-ds-text text-ds-bg font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+            >
+              Continue to Vocabulary
+              <HiOutlineArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* ==================== SECTION 2: VOCABULARY ==================== */}
+        {activeSection === "vocabulary" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-ds-text mb-2">📚 Vocabulary</h2>
+              <p className="text-ds-muted">Tap cards to flip • Click 🔊 for pronunciation</p>
             </div>
 
             {/* Words Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {words.map((word, index) => {
-                const isFlipped = flippedCards[word._id] || showTranslation;
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {words.map((word) => {
+                const isFlipped = flippedCards[word._id];
                 return (
                   <div
                     key={word._id}
                     onClick={() => toggleCardFlip(word._id)}
-                    className="group relative h-48 cursor-pointer perspective-1000"
+                    className="group h-44 cursor-pointer perspective-1000"
                   >
                     <div
                       className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${
                         isFlipped ? "rotate-y-180" : ""
                       }`}
                     >
-                      {/* Front - German */}
+                      {/* Front */}
                       <div className="absolute inset-0 backface-hidden">
-                        <div className="h-full p-6 rounded-2xl bg-gradient-to-br from-ds-surface to-ds-surface/50 border border-ds-border/30 flex flex-col justify-between">
+                        <div className="h-full p-5 rounded-xl bg-gradient-to-br from-ds-surface to-ds-surface/50 border border-ds-border/30 flex flex-col justify-between hover:border-ds-border transition-colors">
                           <div>
-                            <span className="text-xs text-ds-border uppercase tracking-wider">
-                              {word.partOfSpeech || "Wort"}
-                            </span>
-                            <h3 className="text-2xl font-bold text-ds-text mt-2">{word.german}</h3>
-                            {word.article && <span className="text-ds-muted text-sm">({word.article})</span>}
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs text-ds-border uppercase">{word.partOfSpeech}</span>
+                              {word.article && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-ds-bg/50 text-ds-muted">
+                                  {word.article}
+                                </span>
+                              )}
+                            </div>
+                            <h3 className="text-2xl font-bold text-ds-text">{word.german}</h3>
                           </div>
                           <div className="flex items-center justify-between">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                speakWord(word.german);
+                                speakGerman(word.german);
                               }}
-                              className="p-2 rounded-lg bg-ds-bg/50 text-ds-muted hover:text-ds-text hover:bg-ds-bg transition-colors"
+                              className="p-2 rounded-lg bg-ds-bg/50 text-ds-muted hover:text-ds-text transition-colors"
                             >
                               <HiOutlineVolumeUp className="w-5 h-5" />
                             </button>
-                            <span className="text-xs text-ds-border">Click to flip</span>
+                            <span className="text-xs text-ds-border">Tap to flip</span>
                           </div>
                         </div>
                       </div>
-
-                      {/* Back - Translations */}
+                      {/* Back */}
                       <div className="absolute inset-0 backface-hidden rotate-y-180">
-                        <div className="h-full p-6 rounded-2xl bg-gradient-to-br from-ds-muted/20 to-ds-border/20 border border-ds-border/30 flex flex-col justify-between">
-                          <div>
-                            <div className="mb-3">
+                        <div className="h-full p-5 rounded-xl bg-gradient-to-br from-emerald-500/10 to-ds-surface/50 border border-emerald-500/30 flex flex-col justify-center">
+                          <div className="space-y-3 text-center">
+                            <div>
                               <span className="text-xs text-ds-border">English</span>
                               <p className="text-lg text-ds-text font-medium">{word.english}</p>
                             </div>
@@ -300,11 +417,6 @@ const LessonDetail = () => {
                               <p className="text-lg text-ds-text font-bangla">{word.bengali}</p>
                             </div>
                           </div>
-                          {word.example && (
-                            <div className="pt-3 border-t border-ds-border/30">
-                              <p className="text-sm text-ds-muted italic">"{word.example.de}"</p>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -316,45 +428,236 @@ const LessonDetail = () => {
             {words.length === 0 && (
               <div className="text-center py-12 bg-ds-surface/30 rounded-2xl">
                 <HiOutlineBookOpen className="w-12 h-12 text-ds-border mx-auto mb-3" />
-                <p className="text-ds-muted">No words in this lesson yet</p>
+                <p className="text-ds-muted">No vocabulary for this lesson yet</p>
               </div>
             )}
 
-            {/* Start Quiz CTA */}
-            {words.length > 0 && exercises.length > 0 && (
-              <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-ds-surface to-ds-surface/50 border border-ds-border/30 text-center">
-                <HiOutlineLightningBolt className="w-10 h-10 text-ds-muted mx-auto mb-3" />
-                <h3 className="text-xl font-bold text-ds-text mb-2">Ready to test your knowledge?</h3>
-                <p className="text-ds-muted mb-4">Take the quiz to unlock the next lesson</p>
-                <button
-                  onClick={() => {
-                    setActiveTab("exercises");
-                    startQuiz();
-                  }}
-                  className="px-6 py-3 rounded-xl bg-ds-text text-ds-bg font-semibold hover:shadow-lg transition-all"
-                >
-                  Start Quiz →
-                </button>
-              </div>
-            )}
+            <button
+              onClick={() => setActiveSection("grammar")}
+              className="w-full py-4 rounded-xl bg-ds-text text-ds-bg font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+            >
+              Continue to Grammar
+              <HiOutlineArrowRight className="w-5 h-5" />
+            </button>
           </div>
         )}
 
-        {/* Quiz Tab */}
-        {activeTab === "exercises" && (
-          <div>
-            {!quizStarted && !quizCompleted && (
-              <div className="text-center py-16 bg-ds-surface/30 rounded-2xl">
+        {/* ==================== SECTION 3: GRAMMAR ==================== */}
+        {activeSection === "grammar" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-ds-text mb-2">📖 Grammar</h2>
+              <p className="text-ds-muted">One simple rule at a time</p>
+            </div>
+
+            {lesson.grammar && (
+              <div className="bg-ds-surface/30 rounded-2xl border border-ds-border/30 overflow-hidden">
+                <button
+                  onClick={() => setExpandedGrammar(!expandedGrammar)}
+                  className="w-full p-6 flex items-center justify-between hover:bg-ds-surface/20 transition-colors"
+                >
+                  <div className="text-left">
+                    <h3 className="text-xl font-bold text-ds-text">{lesson.grammar.title?.en}</h3>
+                    <p className="text-ds-muted font-bangla">{lesson.grammar.title?.bn}</p>
+                  </div>
+                  {expandedGrammar ? (
+                    <HiOutlineChevronUp className="w-6 h-6 text-ds-muted" />
+                  ) : (
+                    <HiOutlineChevronDown className="w-6 h-6 text-ds-muted" />
+                  )}
+                </button>
+
+                {expandedGrammar && (
+                  <div className="px-6 pb-6 space-y-6">
+                    <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                      <p className="text-ds-text mb-2">{lesson.grammar.explanation?.en}</p>
+                      <p className="text-ds-muted text-sm font-bangla">{lesson.grammar.explanation?.bn}</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {lesson.grammar.rules?.map((rule, i) => (
+                        <div
+                          key={i}
+                          className="p-4 rounded-xl bg-ds-bg/50 border border-ds-border/20 flex flex-col md:flex-row md:items-center gap-3"
+                        >
+                          <div className="flex-1">
+                            <p className="text-ds-text font-medium">{rule.rule}</p>
+                          </div>
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ds-surface">
+                            <span className="text-emerald-400 font-mono">{rule.example}</span>
+                            <button
+                              onClick={() => speakGerman(rule.example)}
+                              className="p-1 rounded hover:bg-ds-bg/50"
+                            >
+                              <HiOutlineVolumeUp className="w-4 h-4 text-ds-muted" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button
+              onClick={() => setActiveSection("practice")}
+              className="w-full py-4 rounded-xl bg-ds-text text-ds-bg font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+            >
+              Continue to Practice
+              <HiOutlineArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* ==================== SECTION 4: PRACTICE ==================== */}
+        {activeSection === "practice" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-ds-text mb-2">✍️ Practice</h2>
+              <p className="text-ds-muted">Quick exercises to reinforce learning</p>
+            </div>
+
+            {exercises.length > 0 ? (
+              <div className="space-y-4">
+                {exercises.slice(0, 3).map((exercise, index) => (
+                  <div
+                    key={exercise._id || index}
+                    className="bg-ds-surface/30 rounded-xl p-6 border border-ds-border/30"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-lg bg-ds-muted/20 flex items-center justify-center text-ds-muted font-bold flex-shrink-0">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-ds-text font-medium mb-4">
+                          {exercise.question?.en || exercise.question}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {exercise.options?.map((option, optIndex) => (
+                            <button
+                              key={optIndex}
+                              className="p-3 rounded-lg border border-ds-border/30 text-ds-text text-left hover:bg-ds-surface hover:border-ds-border transition-all"
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-ds-surface/30 rounded-2xl p-8 border border-ds-border/30 text-center">
                 <HiOutlinePuzzle className="w-16 h-16 text-ds-muted mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-ds-text mb-2">Lesson Quiz</h2>
-                <p className="text-ds-muted mb-2">{exercises.length} questions • Test what you learned</p>
-                <p className="text-ds-border text-sm mb-6">Score 70% or higher to unlock the next lesson</p>
+                <h3 className="text-xl font-bold text-ds-text mb-2">Practice Coming Soon</h3>
+                <p className="text-ds-muted">Interactive exercises will be added here</p>
+              </div>
+            )}
+
+            <button
+              onClick={() => setActiveSection("conversation")}
+              className="w-full py-4 rounded-xl bg-ds-text text-ds-bg font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+            >
+              Continue to Conversation
+              <HiOutlineArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* ==================== SECTION 5: CONVERSATION ==================== */}
+        {activeSection === "conversation" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-ds-text mb-2">💬 Conversation</h2>
+              <p className="text-ds-muted">Real-life situation practice</p>
+            </div>
+
+            {lesson.conversation && (
+              <div className="bg-ds-surface/30 rounded-2xl p-6 border border-ds-border/30">
+                {/* Situation */}
+                <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                  <p className="text-ds-text font-medium">
+                    📍 Situation: {lesson.conversation.situation?.en}
+                  </p>
+                  <p className="text-ds-muted text-sm font-bangla">{lesson.conversation.situation?.bn}</p>
+                </div>
+
+                {/* Dialogue */}
+                <div className="space-y-4">
+                  {lesson.conversation.dialogue?.map((line, index) => (
+                    <div
+                      key={index}
+                      className={`flex gap-4 ${
+                        line.speaker === "B" || line.speaker === "You" ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                          line.speaker === "B" || line.speaker === "You"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-purple-500/20 text-purple-400"
+                        }`}
+                      >
+                        {line.speaker.charAt(0)}
+                      </div>
+                      <div
+                        className={`flex-1 max-w-md ${
+                          line.speaker === "B" || line.speaker === "You" ? "text-right" : ""
+                        }`}
+                      >
+                        <div
+                          className={`inline-block p-4 rounded-2xl ${
+                            line.speaker === "B" || line.speaker === "You"
+                              ? "bg-emerald-500/20 rounded-tr-none"
+                              : "bg-purple-500/10 rounded-tl-none"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <p className="text-ds-text font-medium">{line.text}</p>
+                            <button
+                              onClick={() => speakGerman(line.text)}
+                              className="p-1 rounded-full hover:bg-ds-bg/50 transition-colors"
+                            >
+                              <HiOutlineVolumeUp className="w-4 h-4 text-ds-muted" />
+                            </button>
+                          </div>
+                          <p className="text-ds-muted text-sm">{line.translation?.en}</p>
+                          <p className="text-ds-border text-xs font-bangla mt-1">{line.translation?.bn}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => setActiveSection("quiz")}
+              className="w-full py-4 rounded-xl bg-ds-text text-ds-bg font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+            >
+              Take the Quiz
+              <HiOutlineArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* ==================== SECTION 6: QUIZ ==================== */}
+        {activeSection === "quiz" && (
+          <div className="space-y-6 animate-fade-in">
+            {!quizStarted && !quizCompleted && (
+              <div className="text-center py-16 bg-ds-surface/30 rounded-2xl border border-ds-border/30">
+                <HiOutlineClipboardCheck className="w-16 h-16 text-ds-muted mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-ds-text mb-2">📝 Lesson Quiz</h2>
+                <p className="text-ds-muted mb-2">{exercises.length} questions</p>
+                <p className="text-ds-border text-sm mb-6">Score 70% or higher to complete this lesson</p>
                 <button
                   onClick={startQuiz}
                   disabled={exercises.length === 0}
                   className="px-8 py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg hover:shadow-xl transition-all disabled:opacity-50"
                 >
-                  Start Quiz
+                  {exercises.length === 0 ? "No Quiz Available" : "Start Quiz"}
                 </button>
               </div>
             )}
@@ -374,23 +677,21 @@ const LessonDetail = () => {
                   <div className="h-2 bg-ds-surface rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-ds-muted to-ds-border transition-all"
-                      style={{
-                        width: `${((currentQuestionIndex + 1) / exercises.length) * 100}%`,
-                      }}
+                      style={{ width: `${((currentQuestionIndex + 1) / exercises.length) * 100}%` }}
                     ></div>
                   </div>
                 </div>
 
-                {/* Question Card */}
-                <div className="bg-ds-surface/30 rounded-2xl p-8 mb-6">
+                {/* Question */}
+                <div className="bg-ds-surface/30 rounded-2xl p-8 mb-6 border border-ds-border/30">
                   <span className="text-xs text-ds-border uppercase tracking-wider">
                     {exercises[currentQuestionIndex]?.type || "Multiple Choice"}
                   </span>
-                  <h3 className="text-2xl font-bold text-ds-text mt-3 mb-6">
-                    {exercises[currentQuestionIndex]?.question?.en}
+                  <h3 className="text-xl font-bold text-ds-text mt-3 mb-6">
+                    {exercises[currentQuestionIndex]?.question?.en ||
+                      exercises[currentQuestionIndex]?.question}
                   </h3>
 
-                  {/* Options */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {exercises[currentQuestionIndex]?.options?.map((option, index) => {
                       const isSelected = selectedAnswer === option;
@@ -400,9 +701,7 @@ const LessonDetail = () => {
                       return (
                         <button
                           key={index}
-                          onClick={() =>
-                            !isAnswerChecked && checkAnswer(exercises[currentQuestionIndex]._id, option)
-                          }
+                          onClick={() => !isAnswerChecked && checkAnswer(option)}
                           disabled={isAnswerChecked}
                           className={`p-4 rounded-xl text-left font-medium transition-all ${
                             showResult
@@ -432,7 +731,6 @@ const LessonDetail = () => {
                   </div>
                 </div>
 
-                {/* Next Button */}
                 {isAnswerChecked && (
                   <button
                     onClick={nextQuestion}
@@ -440,13 +738,11 @@ const LessonDetail = () => {
                   >
                     {currentQuestionIndex < exercises.length - 1 ? (
                       <>
-                        Next Question
-                        <HiOutlineArrowRight className="w-5 h-5" />
+                        Next Question <HiOutlineArrowRight className="w-5 h-5" />
                       </>
                     ) : (
                       <>
-                        See Results
-                        <HiOutlineStar className="w-5 h-5" />
+                        See Results <HiOutlineStar className="w-5 h-5" />
                       </>
                     )}
                   </button>
@@ -454,15 +750,15 @@ const LessonDetail = () => {
               </div>
             )}
 
-            {/* Quiz Results */}
+            {/* Results */}
             {quizCompleted && (
-              <div className="text-center py-12 bg-ds-surface/30 rounded-2xl">
+              <div className="text-center py-12 bg-ds-surface/30 rounded-2xl border border-ds-border/30">
                 <div
                   className={`w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center ${
-                    score / exercises.length >= 0.7 ? "bg-green-500/20" : "bg-red-500/20"
+                    finalScorePercent >= 70 ? "bg-green-500/20" : "bg-red-500/20"
                   }`}
                 >
-                  {score / exercises.length >= 0.7 ? (
+                  {finalScorePercent >= 70 ? (
                     <HiOutlineAcademicCap className="w-12 h-12 text-green-400" />
                   ) : (
                     <HiOutlineRefresh className="w-12 h-12 text-red-400" />
@@ -470,21 +766,19 @@ const LessonDetail = () => {
                 </div>
 
                 <h2 className="text-3xl font-bold text-ds-text mb-2">
-                  {score / exercises.length >= 0.7 ? "Congratulations! 🎉" : "Keep Practicing!"}
+                  {finalScorePercent >= 70 ? "Congratulations! 🎉" : "Keep Practicing!"}
                 </h2>
 
-                <div className="text-5xl font-black text-ds-text my-6">
-                  {Math.round((score / exercises.length) * 100)}%
-                </div>
+                <div className="text-5xl font-black text-ds-text my-6">{finalScorePercent}%</div>
 
                 <p className="text-ds-muted mb-2">
                   You got {score} out of {exercises.length} correct
                 </p>
 
-                {score / exercises.length >= 0.7 ? (
-                  <p className="text-green-400 mb-8">✓ Next lesson unlocked!</p>
+                {finalScorePercent >= 70 ? (
+                  <p className="text-green-400 mb-8">✓ Lesson completed! Next lesson unlocked.</p>
                 ) : (
-                  <p className="text-ds-border mb-8">You need 70% to unlock the next lesson</p>
+                  <p className="text-ds-border mb-8">You need 70% to complete this lesson</p>
                 )}
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -492,35 +786,28 @@ const LessonDetail = () => {
                     onClick={() => {
                       setQuizCompleted(false);
                       setQuizStarted(false);
-                      setActiveTab("words");
+                      setActiveSection("vocabulary");
                     }}
                     className="px-6 py-3 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold hover:bg-ds-surface transition-all"
                   >
-                    Review Words
+                    Review Lesson
                   </button>
                   <button
                     onClick={startQuiz}
-                    className="px-6 py-3 rounded-xl bg-ds-text text-ds-bg font-semibold hover:shadow-lg transition-all"
+                    className="px-6 py-3 rounded-xl bg-ds-text text-ds-bg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
                   >
-                    <HiOutlineRefresh className="w-5 h-5 inline mr-2" />
+                    <HiOutlineRefresh className="w-5 h-5" />
                     Try Again
                   </button>
-                  {score / exercises.length >= 0.7 && (
+                  {finalScorePercent >= 70 && (
                     <Link
                       to="/courses"
-                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-ds-muted to-ds-border text-ds-bg font-semibold hover:shadow-lg transition-all"
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold hover:shadow-lg transition-all"
                     >
                       Next Lesson →
                     </Link>
                   )}
                 </div>
-              </div>
-            )}
-
-            {exercises.length === 0 && (
-              <div className="text-center py-12 bg-ds-surface/30 rounded-2xl">
-                <HiOutlinePuzzle className="w-12 h-12 text-ds-border mx-auto mb-3" />
-                <p className="text-ds-muted">No exercises in this lesson yet</p>
               </div>
             )}
           </div>

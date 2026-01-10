@@ -1,9 +1,26 @@
-import React from "react";
+import Hero from "../../components/home/Hero";
+import Features from "../../components/home/Features";
+import HowItWorks from "../../components/home/HowItWorks";
+import Levels from "../../components/home/Levels";
+import CTA from "../../components/home/CTA";
 
 const Home = () => {
   return (
-    <div>
-      <h1>Home Page</h1>
+    <div className="overflow-hidden">
+      {/* Hero Section */}
+      <Hero />
+
+      {/* Features Section */}
+      <Features />
+
+      {/* How It Works Section */}
+      <HowItWorks />
+
+      {/* Levels Section */}
+      <Levels />
+
+      {/* Call to Action Section */}
+      <CTA />
     </div>
   );
 };

@@ -11,7 +11,7 @@ import {
   HiOutlineHome,
   HiOutlineBookOpen,
   HiOutlineTranslate,
-  HiOutlineMicrophone,
+  HiOutlineLightningBolt,
   HiOutlineLogin,
   HiOutlineUserAdd,
   HiOutlineLogout,
@@ -84,18 +84,17 @@ const Navbar = () => {
     { to: "/", label: t("nav.home"), icon: HiOutlineHome },
     { to: "/courses", label: t("nav.courses"), icon: HiOutlineBookOpen },
     { to: "/vocabulary", label: t("nav.vocabulary"), icon: HiOutlineTranslate },
-    { to: "/practice", label: t("nav.practice"), icon: HiOutlineMicrophone },
+    { to: "/practice", label: t("nav.practice"), icon: HiOutlineLightningBolt },
   ];
 
   // Different dropdown links based on role
   const userDropdownLinks = isAdmin
     ? [
         { to: "/admin", label: t("nav.admin"), icon: HiOutlineViewGrid },
-        { to: "/admin/settings", label: "Settings", icon: HiOutlineCog },
+        { to: "/admin/settings", label: t("nav.settings"), icon: HiOutlineCog },
       ]
     : [
-        { to: "/dashboard", label: t("nav.dashboard"), icon: HiOutlineChartBar },
-        { to: "/progress", label: t("nav.progress"), icon: HiOutlineChartBar },
+        { to: "/dashboard", label: t("nav.myStats"), icon: HiOutlineChartBar },
         { to: "/profile", label: t("nav.profile"), icon: HiOutlineUser },
       ];
 

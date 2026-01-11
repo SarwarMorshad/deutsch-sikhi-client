@@ -1,9 +1,9 @@
 import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 import { AuthContext } from "../../context/AuthContext";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
-import useLanguage from "../../hooks/useLanguage";
 import { publicAPI } from "../../utils/api";
 import {
   HiOutlineAcademicCap,
@@ -14,6 +14,7 @@ import {
   HiOutlineClock,
   HiOutlineChevronRight,
   HiOutlineSparkles,
+  HiOutlineTrendingUp,
 } from "react-icons/hi";
 
 const Courses = () => {
@@ -21,11 +22,14 @@ const Courses = () => {
   const { isBengali, getLocalizedContent } = useLanguage();
   const { user } = useContext(AuthContext);
   const axiosSecure = useAxiosSecure();
+
   const [levels, setLevels] = useState([]);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lessonsLoading, setLessonsLoading] = useState(false);
+  const [userProgress, setUserProgress] = useState(null);
+  const [completedLessonIds, setCompletedLessonIds] = useState([]);
 
   // Level colors and info
   const levelInfo = {
@@ -34,7 +38,7 @@ const Courses = () => {
       bgColor: "bg-emerald-500/10",
       borderColor: "border-emerald-500/30",
       textColor: "text-emerald-400",
-      label: { en: "Beginner", bn: "ফাউন্ডেশন", de: "Anfänger" },
+      label: { en: "Beginner", bn: "শুরু", de: "Anfänger" },
       description: {
         en: "Start your German journey with basics",
         bn: "জার্মান শেখা শুরু করুন মূল বিষয় দিয়ে",
@@ -64,6 +68,30 @@ const Courses = () => {
     },
   };
 
+  // Fetch user progress
+  useEffect(() => {
+    const fetchProgress = async () => {
+      if (!user) return;
+
+      try {
+        const [progressRes, lessonsRes] = await Promise.all([
+          axiosSecure.get("/progress/me"),
+          axiosSecure.get("/progress/me/lessons"),
+        ]);
+
+        setUserProgress(progressRes.data.data);
+
+        // Extract completed lesson IDs
+        const completedIds = lessonsRes.data.data?.map((p) => p.lessonId.toString()) || [];
+        setCompletedLessonIds(completedIds);
+      } catch (error) {
+        console.error("Error fetching progress:", error);
+      }
+    };
+
+    fetchProgress();
+  }, [user]);
+
   // Fetch levels on mount
   useEffect(() => {
     const fetchLevels = async () => {
@@ -90,7 +118,6 @@ const Courses = () => {
     const fetchLessons = async () => {
       setLessonsLoading(true);
       try {
-        // Use secure axios if logged in, otherwise public
         const endpoint = `/levels/${selectedLevel._id}/lessons`;
         let response;
 
@@ -98,12 +125,8 @@ const Courses = () => {
           response = await axiosSecure.get(endpoint);
           setLessons(response.data.data || []);
         } else {
-          response = await publicAPI.getLevels();
-          // For public, fetch lessons separately
           const lessonsRes = await fetch(
-            `${import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1"}/levels/${
-              selectedLevel._id
-            }/lessons`
+            `${import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1"}${endpoint}`
           );
           const data = await lessonsRes.json();
           setLessons(data.data || []);
@@ -119,6 +142,31 @@ const Courses = () => {
 
   // Get level info with fallback
   const getLevelInfo = (code) => levelInfo[code] || levelInfo.A1;
+
+  // Get level progress percentage
+  const getLevelProgress = (levelId) => {
+    if (!userProgress?.levelProgress) return 0;
+    const levelProg = userProgress.levelProgress.find((lp) => lp.levelId.toString() === levelId.toString());
+    return levelProg?.percentage || 0;
+  };
+
+  // Check if lesson is completed
+  const isLessonCompleted = (lessonId) => {
+    return completedLessonIds.includes(lessonId.toString());
+  };
+
+  // Check if lesson should be unlocked
+  const isLessonUnlocked = (lessonIndex) => {
+    if (!user) return true; // All unlocked for guests
+    if (lessonIndex === 0) return true; // First lesson always unlocked
+
+    // Check if previous lesson is completed
+    const prevLesson = lessons[lessonIndex - 1];
+    if (prevLesson) {
+      return isLessonCompleted(prevLesson._id);
+    }
+    return true;
+  };
 
   if (loading) {
     return (
@@ -142,7 +190,7 @@ const Courses = () => {
             }`}
           >
             <HiOutlineAcademicCap className="w-4 h-4" />
-            <span>{isBengali ? "কাঠামোগত শিক্ষা পথ" : "Structured Learning Path"}</span>
+            <span>{isBengali ? "কাঠামোগত শেখার পথ" : "Structured Learning Path"}</span>
           </div>
           <h1
             className={`text-4xl md:text-5xl font-black text-ds-text mb-4 ${isBengali ? "font-bangla" : ""}`}
@@ -154,7 +202,7 @@ const Courses = () => {
           </h1>
           <p className={`text-ds-muted text-lg max-w-2xl mx-auto ${isBengali ? "font-bangla" : ""}`}>
             {isBengali
-              ? "A1 থেকে B1 পর্যন্ত আমাদের কাঠামোগত পাঠ্যক্রম অনুসরণ করুন। প্রতিটি লেভেল আগেরটির উপর ভিত্তি করে।"
+              ? "A1 থেকে B1 পর্যন্ত আমাদের কাঠামোগত পাঠ্যক্রম অনুসরণ করুন"
               : "Follow our structured curriculum from A1 to B1. Each level builds on the previous one."}
           </p>
           <p className={`text-ds-border mt-2 ${isBengali ? "" : "font-bangla"}`}>
@@ -163,6 +211,53 @@ const Courses = () => {
               : "A1 থেকে B1 পর্যন্ত আমাদের কাঠামোগত পাঠ্যক্রম অনুসরণ করুন"}
           </p>
         </div>
+
+        {/* User Progress Summary (if logged in) */}
+        {user && userProgress && (
+          <div className="mb-8 p-6 rounded-2xl bg-ds-surface/30 border border-ds-border/30">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-ds-muted to-ds-border flex items-center justify-center">
+                  <HiOutlineTrendingUp className="w-6 h-6 text-ds-bg" />
+                </div>
+                <div>
+                  <h3 className={`text-ds-text font-semibold ${isBengali ? "font-bangla" : ""}`}>
+                    {isBengali ? "আপনার অগ্রগতি" : "Your Progress"}
+                  </h3>
+                  <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                    {userProgress.completedLessons} / {userProgress.totalLessons}{" "}
+                    {isBengali ? "পাঠ সম্পন্ন" : "lessons completed"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-ds-text">{userProgress.overallPercentage}%</div>
+                  <div className={`text-xs text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
+                    {isBengali ? "সম্পূর্ণ" : "Complete"}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-ds-text">{userProgress.averageScore}%</div>
+                  <div className={`text-xs text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
+                    {isBengali ? "গড় স্কোর" : "Avg Score"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Overall progress bar */}
+            <div className="mt-4">
+              <div className="h-2 bg-ds-border/30 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-ds-muted to-ds-border rounded-full transition-all"
+                  style={{ width: `${userProgress.overallPercentage}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content - Split Layout */}
         <div className="flex flex-col lg:flex-row gap-8">
@@ -181,6 +276,7 @@ const Courses = () => {
               const info = getLevelInfo(level.code);
               const isSelected = selectedLevel?._id === level._id;
               const isLocked = !level.isActive;
+              const progress = getLevelProgress(level._id);
 
               return (
                 <button
@@ -211,13 +307,12 @@ const Courses = () => {
                     )}
                   </div>
 
-                  {/* Level Name */}
+                  {/* Level Title */}
                   <h3 className={`text-ds-text font-semibold mb-1 ${isBengali ? "font-bangla" : ""}`}>
-                    {getLocalizedContent(info.label)}
+                    {getLocalizedContent(level.title) || info.label[isBengali ? "bn" : "en"]}
                   </h3>
-                  <p className="text-ds-muted text-sm mb-1">{info.label.de}</p>
-                  <p className={`text-ds-border text-sm ${isBengali ? "font-bangla" : ""}`}>
-                    {getLocalizedContent(info.description)}
+                  <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                    {getLocalizedContent(level.description) || info.description[isBengali ? "bn" : "en"]}
                   </p>
 
                   {/* Coming Soon Badge */}
@@ -232,7 +327,7 @@ const Courses = () => {
                   )}
 
                   {/* Progress Bar (if user has progress) */}
-                  {level.progress && (
+                  {user && progress > 0 && (
                     <div className="mt-4">
                       <div
                         className={`flex justify-between text-xs text-ds-muted mb-1 ${
@@ -240,12 +335,12 @@ const Courses = () => {
                         }`}
                       >
                         <span>{isBengali ? "অগ্রগতি" : "Progress"}</span>
-                        <span>{level.progress}%</span>
+                        <span>{progress}%</span>
                       </div>
                       <div className="h-1.5 bg-ds-border/30 rounded-full overflow-hidden">
                         <div
                           className={`h-full bg-gradient-to-r ${info.color} rounded-full transition-all`}
-                          style={{ width: `${level.progress}%` }}
+                          style={{ width: `${progress}%` }}
                         ></div>
                       </div>
                     </div>
@@ -328,15 +423,15 @@ const Courses = () => {
                 ) : (
                   <div className="space-y-3">
                     {lessons.map((lesson, index) => {
-                      const isLocked = lesson.unlocked === false;
-                      const isCompleted = lesson.progress?.passed;
+                      const isCompleted = isLessonCompleted(lesson._id);
+                      const isUnlocked = isLessonUnlocked(index);
                       const levelColor = getLevelInfo(selectedLevel.code);
 
                       return (
                         <div
                           key={lesson._id}
                           className={`relative p-5 rounded-xl border transition-all duration-300 group ${
-                            isLocked
+                            !isUnlocked
                               ? "border-ds-border/20 bg-ds-surface/10 opacity-70"
                               : isCompleted
                               ? `${levelColor.borderColor} ${levelColor.bgColor}`
@@ -347,14 +442,14 @@ const Courses = () => {
                             {/* Lesson Number */}
                             <div
                               className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
-                                isLocked
+                                !isUnlocked
                                   ? "bg-ds-surface text-ds-border"
                                   : isCompleted
                                   ? `bg-gradient-to-r ${levelColor.color} text-white`
                                   : "bg-ds-surface text-ds-text"
                               }`}
                             >
-                              {isLocked ? (
+                              {!isUnlocked ? (
                                 <HiOutlineLockClosed className="w-5 h-5" />
                               ) : isCompleted ? (
                                 <HiOutlineCheckCircle className="w-6 h-6" />
@@ -393,18 +488,13 @@ const Courses = () => {
                                   {lesson.wordCount || 0} {isBengali ? "শব্দ" : "words"}
                                 </span>
                                 <span>
-                                  {lesson.exerciseCount || 0} {isBengali ? "অনুশীলন" : "exercises"}
+                                  {lesson.exerciseCount || 0} {isBengali ? "প্রশ্ন" : "exercises"}
                                 </span>
-                                {lesson.progress?.score && (
-                                  <span className={levelColor.textColor}>
-                                    {isBengali ? "স্কোর" : "Score"}: {lesson.progress.score}%
-                                  </span>
-                                )}
                               </div>
                             </div>
 
                             {/* Action */}
-                            {!isLocked && (
+                            {isUnlocked && (
                               <Link
                                 to={`/lessons/${lesson._id}`}
                                 className={`p-3 rounded-xl transition-all ${
@@ -419,13 +509,16 @@ const Courses = () => {
                           </div>
 
                           {/* Unlock Message */}
-                          {isLocked && lesson.unlockReason && (
+                          {!isUnlocked && (
                             <p
                               className={`mt-3 text-xs text-ds-border italic ${
                                 isBengali ? "font-bangla" : ""
                               }`}
                             >
-                              🔒 {lesson.unlockReason}
+                              🔒{" "}
+                              {isBengali
+                                ? "আগের পাঠ সম্পন্ন করুন আনলক করতে"
+                                : "Complete previous lesson to unlock"}
                             </p>
                           )}
                         </div>
@@ -445,7 +538,7 @@ const Courses = () => {
                     }`}
                   >
                     <HiOutlinePlay className="w-5 h-5" />
-                    {isBengali ? "বিনামূল্যে শেখা শুরু করুন" : "Start Learning Free"}
+                    {t("courses.startLearning")}
                   </Link>
                 )}
               </>

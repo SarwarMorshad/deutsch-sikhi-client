@@ -92,4 +92,35 @@ export const publicAPI = {
   },
 };
 
+/**
+ * Progress API calls (requires auth)
+ */
+export const progressAPI = {
+  // Get user's progress summary
+  getProgress: async (token) => {
+    const response = await axiosPublic.get("/progress/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  // Get all completed lessons
+  getCompletedLessons: async (token) => {
+    const response = await axiosPublic.get("/progress/me/lessons", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  // Save lesson progress
+  saveProgress: async (token, lessonId, score) => {
+    const response = await axiosPublic.post(
+      "/progress",
+      { lessonId, score },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+};
+
 export default axiosPublic;

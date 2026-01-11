@@ -26,6 +26,9 @@ import AdminVocabulary from "../pages/admin/AdminVocabulary";
 import AdminExercises from "../pages/admin/AdminExercises";
 import AdminUsers from "../pages/admin/AdminUsers";
 import AdminSettings from "../pages/admin/AdminSettings";
+import Vocabulary from "../pages/public/Vocabulary";
+import Practice from "../pages/public/Practice";
+import Dashboard from "../pages/user/Dashboard";
 
 const router = createBrowserRouter([
   // Main Site Routes
@@ -48,17 +51,17 @@ const router = createBrowserRouter([
       },
       {
         path: "vocabulary",
-        element: <div className="p-8 text-ds-text">Vocabulary Page - Coming Soon</div>,
+        element: <Vocabulary />,
       },
       {
         path: "practice",
-        element: <div className="p-8 text-ds-text">Practice Page - Coming Soon</div>,
+        element: <Practice />,
       },
       {
         path: "dashboard",
         element: (
           <PrivateRoute>
-            <div className="p-8 text-ds-text">Dashboard - Coming Soon</div>
+            <Dashboard />
           </PrivateRoute>
         ),
       },

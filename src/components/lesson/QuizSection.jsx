@@ -13,7 +13,7 @@ import {
   HiOutlineAcademicCap,
 } from "react-icons/hi";
 
-const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
+const QuizSection = ({ exercises, onComplete, onReviewLesson, onNextLesson, nextLesson }) => {
   const { t } = useTranslation();
   const { isBengali, getLocalizedContent } = useLanguage();
   const [quizStarted, setQuizStarted] = useState(false);
@@ -276,14 +276,18 @@ const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
               {t("lesson.quiz.tryAgain")}
             </button>
             {finalScorePercent >= 70 && (
-              <Link
-                to="/courses"
+              <button
+                onClick={onNextLesson}
                 className={`px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold hover:shadow-lg transition-all ${
                   isBengali ? "font-bangla" : ""
                 }`}
               >
-                {t("lesson.quiz.nextLesson")} →
-              </Link>
+                {nextLesson ? (
+                  <>{t("lesson.quiz.nextLesson")} →</>
+                ) : (
+                  <>{isBengali ? "কোর্সে ফিরে যান" : "Back to Courses"} →</>
+                )}
+              </button>
             )}
           </div>
         </div>

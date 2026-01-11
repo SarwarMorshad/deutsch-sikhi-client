@@ -1,6 +1,8 @@
 import { useState, useContext, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { AuthContext } from "../../context/AuthContext";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
+import useLanguage from "../../hooks/useLanguage";
 import {
   HiOutlineUser,
   HiOutlineMail,
@@ -18,8 +20,10 @@ import {
 import toast from "react-hot-toast";
 
 const Profile = () => {
-  const { user, dbUser, updateUserProfile, refreshDbUser, logOut } = useContext(AuthContext);
+  const { t } = useTranslation();
+  const { user, dbUser, updateUserProfile, logOut } = useContext(AuthContext);
   const axiosSecure = useAxiosSecure();
+  const { currentLanguage, isBengali, changeLanguage } = useLanguage();
   const fileInputRef = useRef(null);
 
   // Edit states
@@ -27,7 +31,6 @@ const Profile = () => {
   const [newName, setNewName] = useState(dbUser?.name || user?.displayName || "");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [currentLang, setCurrentLang] = useState(dbUser?.preferences?.language || "en");
 
   // Delete account modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -39,7 +42,7 @@ const Profile = () => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "N/A";
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString(isBengali ? "bn-BD" : "en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -66,7 +69,7 @@ const Profile = () => {
   // Handle name update
   const handleNameUpdate = async () => {
     if (!newName.trim()) {
-      toast.error("Name cannot be empty");
+      toast.error(t("common.error"));
       return;
     }
 
@@ -78,14 +81,11 @@ const Profile = () => {
       // Update MongoDB
       await axiosSecure.patch("/users/me", { name: newName.trim() });
 
-      // Refresh dbUser
-      await refreshDbUser();
-
-      toast.success("Name updated successfully");
+      toast.success(t("toast.nameUpdated"));
       setIsEditingName(false);
     } catch (error) {
       console.error("Error updating name:", error);
-      toast.error("Failed to update name");
+      toast.error(t("toast.errorOccurred"));
     } finally {
       setSaving(false);
     }
@@ -132,13 +132,10 @@ const Profile = () => {
       // Update MongoDB
       await axiosSecure.patch("/users/me", { photoURL });
 
-      // Refresh dbUser
-      await refreshDbUser();
-
-      toast.success("Photo updated successfully");
+      toast.success(t("toast.photoUpdated"));
     } catch (error) {
       console.error("Error uploading photo:", error);
-      toast.error("Failed to upload photo");
+      toast.error(t("toast.errorOccurred"));
     } finally {
       setUploading(false);
     }
@@ -148,19 +145,11 @@ const Profile = () => {
   const handleLanguageChange = async (language) => {
     try {
       await axiosSecure.patch("/users/me/language", { language });
-
-      // Update local state immediately
-      setCurrentLang(language);
-
-      // Try to refresh dbUser if available
-      if (typeof refreshDbUser === "function") {
-        await refreshDbUser();
-      }
-
-      toast.success(`Language changed to ${language === "bn" ? "Bengali" : "English"}`);
+      changeLanguage(language);
+      toast.success(t("toast.languageChanged"));
     } catch (error) {
       console.error("Error changing language:", error);
-      toast.error(error.response?.data?.message || "Failed to change language");
+      toast.error(t("toast.errorOccurred"));
     }
   };
 
@@ -177,7 +166,7 @@ const Profile = () => {
       logOut();
     } catch (error) {
       console.error("Error deleting account:", error);
-      toast.error("Failed to delete account");
+      toast.error(t("toast.errorOccurred"));
     }
   };
 
@@ -186,8 +175,10 @@ const Profile = () => {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-ds-text">Profile Settings</h1>
-          <p className="text-ds-muted mt-1">Manage your account information</p>
+          <h1 className={`text-3xl font-bold text-ds-text ${isBengali ? "font-bangla" : ""}`}>
+            {t("profile.title")}
+          </h1>
+          <p className={`text-ds-muted mt-1 ${isBengali ? "font-bangla" : ""}`}>{t("profile.subtitle")}</p>
         </div>
 
         {/* Profile Card */}
@@ -283,9 +274,13 @@ const Profile = () => {
               <HiOutlineMail className="w-4 h-4" />
               <span>{dbUser?.email || user?.email}</span>
               {user?.emailVerified && (
-                <span className="flex items-center gap-1 text-xs text-green-400">
+                <span
+                  className={`flex items-center gap-1 text-xs text-green-400 ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
+                >
                   <HiOutlineShieldCheck className="w-3 h-3" />
-                  Verified
+                  {t("profile.verified")}
                 </span>
               )}
             </div>
@@ -301,107 +296,139 @@ const Profile = () => {
 
         {/* Account Details */}
         <div className="bg-ds-surface/30 rounded-2xl border border-ds-border/30 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-ds-text mb-4 flex items-center gap-2">
+          <h3
+            className={`text-lg font-semibold text-ds-text mb-4 flex items-center gap-2 ${
+              isBengali ? "font-bangla" : ""
+            }`}
+          >
             <HiOutlineUser className="w-5 h-5" />
-            Account Details
+            {t("profile.accountDetails")}
           </h3>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-ds-border/20">
-              <div className="flex items-center gap-3 text-ds-muted">
+              <div className={`flex items-center gap-3 text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
                 <HiOutlineCalendar className="w-5 h-5" />
-                <span>Member since</span>
+                <span>{t("profile.memberSince")}</span>
               </div>
               <span className="text-ds-text">{getMemberSince()}</span>
             </div>
 
             <div className="flex items-center justify-between py-3 border-b border-ds-border/20">
-              <div className="flex items-center gap-3 text-ds-muted">
+              <div className={`flex items-center gap-3 text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
                 <HiOutlineCalendar className="w-5 h-5" />
-                <span>Last updated</span>
+                <span>{t("profile.lastUpdated")}</span>
               </div>
               <span className="text-ds-text">{getLastUpdated()}</span>
             </div>
 
             <div className="flex items-center justify-between py-3">
-              <div className="flex items-center gap-3 text-ds-muted">
+              <div className={`flex items-center gap-3 text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
                 <HiOutlineShieldCheck className="w-5 h-5" />
-                <span>Account Status</span>
+                <span>{t("profile.accountStatus")}</span>
               </div>
-              <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm">Active</span>
+              <span
+                className={`px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm ${
+                  isBengali ? "font-bangla" : ""
+                }`}
+              >
+                {t("profile.active")}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Language Preference */}
         <div className="bg-ds-surface/30 rounded-2xl border border-ds-border/30 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-ds-text mb-4 flex items-center gap-2">
+          <h3
+            className={`text-lg font-semibold text-ds-text mb-4 flex items-center gap-2 ${
+              isBengali ? "font-bangla" : ""
+            }`}
+          >
             <HiOutlineGlobe className="w-5 h-5" />
-            Language Preference
+            {t("profile.language.title")}
           </h3>
 
-          <p className="text-ds-muted text-sm mb-4">Choose your preferred language for translations</p>
+          <p className={`text-ds-muted text-sm mb-4 ${isBengali ? "font-bangla" : ""}`}>
+            {t("profile.language.subtitle")}
+          </p>
 
           <div className="flex gap-3">
             <button
               onClick={() => handleLanguageChange("en")}
               className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                currentLang === "en"
+                currentLanguage === "en"
                   ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
                   : "border-ds-border/30 text-ds-muted hover:border-ds-border"
               }`}
             >
-              <span className="text-2xl mb-1">🇬🇧</span>
-              <p className="font-medium">English</p>
+              <span className="text-2xl mb-1">🇺🇸</span>
+              <p className="font-medium">{t("profile.language.english")}</p>
             </button>
             <button
               onClick={() => handleLanguageChange("bn")}
               className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all ${
-                currentLang === "bn"
+                currentLanguage === "bn"
                   ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
                   : "border-ds-border/30 text-ds-muted hover:border-ds-border"
               }`}
             >
               <span className="text-2xl mb-1">🇧🇩</span>
-              <p className="font-medium font-bangla">বাংলা</p>
+              <p className="font-medium font-bangla">{t("profile.language.bengali")}</p>
             </button>
           </div>
         </div>
 
         {/* Danger Zone */}
         <div className="bg-red-500/5 rounded-2xl border border-red-500/20 p-6">
-          <h3 className="text-lg font-semibold text-red-400 mb-4 flex items-center gap-2">
+          <h3
+            className={`text-lg font-semibold text-red-400 mb-4 flex items-center gap-2 ${
+              isBengali ? "font-bangla" : ""
+            }`}
+          >
             <HiOutlineExclamation className="w-5 h-5" />
-            Danger Zone
+            {t("profile.danger.title")}
           </h3>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-ds-text font-medium">Sign Out</p>
-                <p className="text-ds-muted text-sm">Sign out from your account</p>
+                <p className={`text-ds-text font-medium ${isBengali ? "font-bangla" : ""}`}>
+                  {t("profile.danger.signOut")}
+                </p>
+                <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                  {t("profile.danger.signOutDesc")}
+                </p>
               </div>
               <button
                 onClick={logOut}
-                className="px-4 py-2 rounded-xl border border-ds-border/30 text-ds-muted hover:text-ds-text hover:bg-ds-surface transition-all flex items-center gap-2"
+                className={`px-4 py-2 rounded-xl border border-ds-border/30 text-ds-muted hover:text-ds-text hover:bg-ds-surface transition-all flex items-center gap-2 ${
+                  isBengali ? "font-bangla" : ""
+                }`}
               >
                 <HiOutlineLogout className="w-4 h-4" />
-                Sign Out
+                {t("profile.danger.signOut")}
               </button>
             </div>
 
             <div className="border-t border-red-500/20 pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-ds-text font-medium">Delete Account</p>
-                  <p className="text-ds-muted text-sm">Permanently delete your account and all data</p>
+                  <p className={`text-ds-text font-medium ${isBengali ? "font-bangla" : ""}`}>
+                    {t("profile.danger.deleteAccount")}
+                  </p>
+                  <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                    {t("profile.danger.deleteDesc")}
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all flex items-center gap-2"
+                  className={`px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all flex items-center gap-2 ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
                 >
                   <HiOutlineTrash className="w-4 h-4" />
-                  Delete
+                  {t("common.delete")}
                 </button>
               </div>
             </div>
@@ -416,16 +443,17 @@ const Profile = () => {
                 <div className="p-3 rounded-full bg-red-500/20">
                   <HiOutlineExclamation className="w-6 h-6 text-red-400" />
                 </div>
-                <h3 className="text-xl font-bold text-ds-text">Delete Account</h3>
+                <h3 className={`text-xl font-bold text-ds-text ${isBengali ? "font-bangla" : ""}`}>
+                  {t("profile.danger.deleteAccount")}
+                </h3>
               </div>
 
-              <p className="text-ds-muted mb-4">
-                This action cannot be undone. All your data, progress, and settings will be permanently
-                deleted.
+              <p className={`text-ds-muted mb-4 ${isBengali ? "font-bangla" : ""}`}>
+                {t("profile.danger.deleteConfirm")}
               </p>
 
-              <p className="text-ds-text mb-2">
-                Type <span className="font-mono text-red-400">DELETE</span> to confirm:
+              <p className={`text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                {t("profile.danger.typeDelete")}
               </p>
 
               <input
@@ -442,16 +470,20 @@ const Profile = () => {
                     setShowDeleteModal(false);
                     setDeleteConfirmText("");
                   }}
-                  className="flex-1 py-3 rounded-xl border border-ds-border/30 text-ds-text hover:bg-ds-bg transition-colors"
+                  className={`flex-1 py-3 rounded-xl border border-ds-border/30 text-ds-text hover:bg-ds-bg transition-colors ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   onClick={handleDeleteAccount}
                   disabled={deleteConfirmText !== "DELETE"}
-                  className="flex-1 py-3 rounded-xl bg-red-500 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
+                  className={`flex-1 py-3 rounded-xl bg-red-500 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600 transition-colors ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
                 >
-                  Delete Forever
+                  {t("profile.danger.deleteForever")}
                 </button>
               </div>
             </div>

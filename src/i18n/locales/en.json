@@ -1,0 +1,349 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "continue": "Continue",
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "viewAll": "View All",
+    "optional": "optional",
+    "uploading": "Uploading...",
+    "or": "or"
+  },
+
+  "nav": {
+    "home": "Home",
+    "courses": "Courses",
+    "vocabulary": "Vocabulary",
+    "practice": "Practice",
+    "profile": "Profile",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "progress": "Progress",
+    "admin": "Admin Panel"
+  },
+
+  "footer": {
+    "quickLinks": "Quick Links",
+    "levels": "Levels",
+    "connect": "Connect",
+    "allRights": "All rights reserved.",
+    "madeWith": "Made with",
+    "by": "by",
+    "dataSource": "Vocabulary data partially sourced from Wiktionary."
+  },
+
+  "home": {
+    "hero": {
+      "badge": "🇩🇪 Learn German the Smart Way",
+      "title": "Master German",
+      "titleHighlight": "with Bengali Support",
+      "description": "The first German learning platform designed specifically for Bengali speakers. Learn with translations, pronunciation guides, and cultural context that makes sense to you.",
+      "startLearning": "Start Learning — It's Free",
+      "exploreCourses": "Explore Courses",
+      "learnersCount": "Active Learners",
+      "lessonsCount": "Lessons",
+      "rating": "Rating"
+    },
+    "features": {
+      "title": "Why Choose",
+      "titleHighlight": "DeutschShikhi?",
+      "subtitle": "Built specifically for Bengali speakers learning German",
+      "bengaliSupport": {
+        "title": "Bengali Translations",
+        "description": "Every word, phrase, and grammar rule explained in Bengali for better understanding"
+      },
+      "audio": {
+        "title": "Native Pronunciation",
+        "description": "Listen to authentic German pronunciation with IPA guides"
+      },
+      "structured": {
+        "title": "Structured Learning",
+        "description": "Follow A1 to B2 curriculum aligned with European standards"
+      },
+      "interactive": {
+        "title": "Interactive Exercises",
+        "description": "Practice with quizzes, flashcards, and conversation simulations"
+      }
+    },
+    "levels": {
+      "title": "Your Learning Path",
+      "subtitle": "From complete beginner to confident speaker",
+      "a1": {
+        "title": "A1 - Beginner",
+        "description": "Master basics: greetings, numbers, simple conversations"
+      },
+      "a2": {
+        "title": "A2 - Elementary",
+        "description": "Daily situations: shopping, travel, appointments"
+      },
+      "b1": {
+        "title": "B1 - Intermediate",
+        "description": "Express opinions, understand main points of clear text"
+      },
+      "startA1": "Start with A1"
+    },
+    "cta": {
+      "title": "Ready to Start Your German Journey?",
+      "subtitle": "Join thousands of Bengali speakers learning German the smart way",
+      "button": "Create Free Account"
+    }
+  },
+
+  "courses": {
+    "title": "German Courses",
+    "subtitle": "Choose your level and start learning",
+    "selectLevel": "Select Level",
+    "lessons": "Lessons",
+    "lesson": "Lesson",
+    "modules": "modules",
+    "minutes": "min",
+    "startLearning": "Start Learning",
+    "continueLearning": "Continue Learning",
+    "completed": "Completed",
+    "locked": "Locked",
+    "comingSoon": "Coming Soon",
+    "noLessons": "No lessons available for this level yet"
+  },
+
+  "lesson": {
+    "backToCourses": "Back to Courses",
+    "module": "Module",
+    "words": "Words",
+    "questions": "Questions",
+    "mins": "Mins",
+    "sections": {
+      "warmup": "Warm-up",
+      "vocabulary": "Vocabulary",
+      "grammar": "Grammar",
+      "practice": "Practice",
+      "conversation": "Conversation",
+      "quiz": "Quiz"
+    },
+    "warmup": {
+      "title": "🎯 Warm-up",
+      "subtitle": "Listen and read the dialogue",
+      "objectives": "What you'll learn"
+    },
+    "vocabulary": {
+      "title": "📚 Vocabulary",
+      "subtitle": "Tap cards to flip • Click 🔊 for pronunciation",
+      "tapToFlip": "Tap to flip",
+      "noWords": "No vocabulary for this lesson yet"
+    },
+    "grammar": {
+      "title": "📖 Grammar",
+      "subtitle": "One simple rule at a time",
+      "noGrammar": "No grammar content for this lesson"
+    },
+    "practice": {
+      "title": "🎯 Practice",
+      "subtitle": "Test your memory",
+      "flashcard": "📝 Flashcard",
+      "listen": "🎧 Listen",
+      "whatIsGerman": "What is the German word for:",
+      "answer": "Answer",
+      "showAnswer": "Show Answer",
+      "shuffle": "Shuffle",
+      "nextWord": "Next Word",
+      "noWords": "No words to practice in this lesson"
+    },
+    "conversation": {
+      "title": "💬 Conversation",
+      "subtitle": "Practice real-world dialogue",
+      "situation": "Situation",
+      "tips": "💡 Practice Tips",
+      "tip1": "Read each line aloud",
+      "tip2": "Practice both roles",
+      "tip3": "Focus on pronunciation",
+      "noConversation": "No conversation practice for this lesson"
+    },
+    "quiz": {
+      "title": "📝 Lesson Quiz",
+      "questions": "questions",
+      "passMessage": "Score 70% or higher to complete this lesson",
+      "startQuiz": "Start Quiz",
+      "noQuiz": "No Quiz Available",
+      "question": "Question",
+      "of": "of",
+      "answered": "answered",
+      "nextQuestion": "Next Question",
+      "submitQuiz": "Submit Quiz",
+      "congratulations": "Congratulations! 🎉",
+      "keepPracticing": "Keep Practicing!",
+      "youGot": "You got",
+      "outOf": "out of",
+      "correct": "correct",
+      "lessonCompleted": "✓ Lesson completed! Next lesson unlocked.",
+      "needScore": "You need 70% to complete this lesson",
+      "reviewLesson": "Review Lesson",
+      "tryAgain": "Try Again",
+      "nextLesson": "Next Lesson",
+      "answerReview": "📋 Answer Review",
+      "yourAnswer": "Your answer",
+      "correctAnswer": "Correct answer",
+      "notAnswered": "Not answered"
+    },
+    "continue": {
+      "toVocabulary": "Continue to Vocabulary",
+      "toGrammar": "Continue to Grammar",
+      "toPractice": "Continue to Practice",
+      "toConversation": "Continue to Conversation",
+      "toQuiz": "Continue to Quiz"
+    }
+  },
+
+  "profile": {
+    "title": "Profile Settings",
+    "subtitle": "Manage your account information",
+    "editName": "Edit name",
+    "uploadPhoto": "Upload photo",
+    "verified": "Verified",
+    "accountDetails": "Account Details",
+    "memberSince": "Member since",
+    "lastUpdated": "Last updated",
+    "accountStatus": "Account Status",
+    "active": "Active",
+    "language": {
+      "title": "Language Preference",
+      "subtitle": "Choose your preferred language for translations",
+      "english": "English",
+      "bengali": "বাংলা",
+      "changed": "Language changed to"
+    },
+    "danger": {
+      "title": "Danger Zone",
+      "signOut": "Sign Out",
+      "signOutDesc": "Sign out from your account",
+      "deleteAccount": "Delete Account",
+      "deleteDesc": "Permanently delete your account and all data",
+      "deleteConfirm": "This action cannot be undone. All your data, progress, and settings will be permanently deleted.",
+      "typeDelete": "Type DELETE to confirm:",
+      "deleteForever": "Delete Forever"
+    }
+  },
+
+  "auth": {
+    "login": {
+      "welcomeBack": "Welcome Back",
+      "continueJourney": "Continue your German learning journey",
+      "signIn": "Sign In",
+      "signingIn": "Signing in...",
+      "email": "Email Address",
+      "password": "Password",
+      "forgot": "Forgot?",
+      "enterCredentials": "Enter your credentials to access your account",
+      "orContinueWith": "or continue with",
+      "noAccount": "Don't have an account?",
+      "createOne": "Create one"
+    },
+    "register": {
+      "getStarted": "Get Started",
+      "createAccount": "Create Account",
+      "startJourney": "Start your German learning journey today",
+      "step": "Step",
+      "of": "of",
+      "fullName": "Full Name",
+      "email": "Email Address",
+      "profilePhoto": "Profile Photo",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "passwordStrength": "Password Strength",
+      "clickToUpload": "Click or drag to upload image",
+      "imageUploaded": "Image uploaded successfully!",
+      "creating": "Creating...",
+      "continueWithGoogle": "Continue with Google",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "joinDeutschShikhi": "Join DeutschShikhi",
+      "passwordRules": {
+        "minLength": "At least 6 characters",
+        "uppercase": "One uppercase letter (A-Z)",
+        "lowercase": "One lowercase letter (a-z)",
+        "number": "One number (0-9)",
+        "special": "One special character (!@#$%^&*)"
+      },
+      "features": {
+        "feature1": "Structured A1-A2 curriculum",
+        "feature2": "Native German pronunciation",
+        "feature3": "Learn on any device",
+        "feature4": "100% free, forever"
+      },
+      "accountCreated": "Account created! Please check your email to verify.",
+      "errors": {
+        "invalidImage": "Please upload a valid image (JPG, PNG, GIF, WEBP)",
+        "imageTooLarge": "Image size must be less than 5MB",
+        "uploadFailed": "Image upload failed. Please try again.",
+        "fillAllFields": "Please fill in all fields",
+        "invalidEmail": "Please enter a valid email",
+        "passwordRequirements": "Password doesn't meet all requirements",
+        "passwordMismatch": "Passwords don't match",
+        "emailInUse": "Email already in use",
+        "registrationFailed": "Registration failed. Please try again."
+      }
+    },
+    "verifyEmail": {
+      "title": "Verify Your Email",
+      "sentTo": "We've sent a verification link to",
+      "step1": "Check your email inbox (and spam folder)",
+      "step2": "Click the verification link in the email",
+      "step3": "Come back here and click \"I've Verified\"",
+      "iVerified": "I've Verified My Email",
+      "resend": "Resend Verification Email",
+      "resendIn": "Resend in",
+      "sending": "Sending...",
+      "emailSent": "Verification email sent!",
+      "verified": "Email verified successfully!",
+      "notVerifiedYet": "Email not verified yet. Please check your inbox.",
+      "tooManyRequests": "Too many requests. Please try again later.",
+      "sendFailed": "Failed to send email. Please try again.",
+      "useDifferentEmail": "Sign out and use a different email",
+      "didntReceive": "Didn't receive the email? Check your spam folder or",
+      "clickToResend": "click here to resend"
+    },
+    "errors": {
+      "noAccount": "No account found with this email",
+      "wrongPassword": "Incorrect password",
+      "invalidCredentials": "Invalid email or password",
+      "loginFailed": "Login failed. Please try again.",
+      "googleFailed": "Google sign-in failed"
+    }
+  },
+
+  "toast": {
+    "loginSuccess": "Welcome back!",
+    "welcomeBack": "Welcome back!",
+    "welcomeAdmin": "Welcome back, Admin!",
+    "welcomeToDeutschShikhi": "Welcome to DeutschShikhi!",
+    "logoutSuccess": "Logged out successfully",
+    "registerSuccess": "Account created successfully",
+    "profileUpdated": "Profile updated successfully",
+    "photoUpdated": "Photo updated successfully",
+    "nameUpdated": "Name updated successfully",
+    "languageChanged": "Language changed successfully",
+    "progressSaved": "Progress saved!",
+    "errorOccurred": "An error occurred",
+    "pleaseLogin": "Please login to continue"
+  },
+
+  "error": {
+    "pageNotFound": "Page Not Found",
+    "pageNotFoundDesc": "The page you're looking for doesn't exist or has been moved.",
+    "germanTip": "Learn German while you're here!",
+    "goHome": "Go Home",
+    "browseCourses": "Browse Courses",
+    "goBack": "Go Back"
+  }
+}

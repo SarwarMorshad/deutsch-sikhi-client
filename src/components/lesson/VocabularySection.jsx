@@ -1,7 +1,11 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 import { HiOutlineVolumeUp, HiOutlineBookOpen, HiOutlineArrowRight } from "react-icons/hi";
 
 const VocabularySection = ({ words, speakGerman, onNext }) => {
+  const { t } = useTranslation();
+  const { isBengali } = useLanguage();
   const [flippedCards, setFlippedCards] = useState({});
 
   const toggleCardFlip = (wordId) => {
@@ -11,8 +15,10 @@ const VocabularySection = ({ words, speakGerman, onNext }) => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-ds-text mb-2">📚 Vocabulary</h2>
-        <p className="text-ds-muted">Tap cards to flip • Click 🔊 for pronunciation</p>
+        <h2 className={`text-2xl font-bold text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+          {t("lesson.vocabulary.title")}
+        </h2>
+        <p className={`text-ds-muted ${isBengali ? "font-bangla" : ""}`}>{t("lesson.vocabulary.subtitle")}</p>
       </div>
 
       {/* Words Grid */}
@@ -54,7 +60,9 @@ const VocabularySection = ({ words, speakGerman, onNext }) => {
                       >
                         <HiOutlineVolumeUp className="w-5 h-5" />
                       </button>
-                      <span className="text-xs text-ds-border">Tap to flip</span>
+                      <span className={`text-xs text-ds-border ${isBengali ? "font-bangla" : ""}`}>
+                        {t("lesson.vocabulary.tapToFlip")}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -83,15 +91,19 @@ const VocabularySection = ({ words, speakGerman, onNext }) => {
       {words.length === 0 && (
         <div className="text-center py-12 bg-ds-surface/30 rounded-2xl">
           <HiOutlineBookOpen className="w-12 h-12 text-ds-border mx-auto mb-3" />
-          <p className="text-ds-muted">No vocabulary for this lesson yet</p>
+          <p className={`text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
+            {t("lesson.vocabulary.noWords")}
+          </p>
         </div>
       )}
 
       <button
         onClick={onNext}
-        className="w-full py-4 rounded-xl bg-ds-text text-ds-bg font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+        className={`w-full py-4 rounded-xl bg-ds-text text-ds-bg font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all ${
+          isBengali ? "font-bangla" : ""
+        }`}
       >
-        Continue to Grammar
+        {t("lesson.continue.toGrammar")}
         <HiOutlineArrowRight className="w-5 h-5" />
       </button>
     </div>

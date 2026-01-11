@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 import { HiOutlineHeart, HiOutlineMail, HiOutlineGlobeAlt } from "react-icons/hi";
 import { FaGithub, FaLinkedin, FaFacebook } from "react-icons/fa";
 
 const Footer = () => {
+  const { t } = useTranslation();
+  const { isBengali } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -15,27 +19,52 @@ const Footer = () => {
             <Link to="/" className="text-2xl font-bold text-ds-text">
               Deutsch<span className="text-ds-muted">Shikhi</span>
             </Link>
-            <p className="mt-3 text-ds-muted text-sm">জার্মান ভাষা শিখুন সহজে বাংলা ও ইংরেজিতে।</p>
-            <p className="mt-1 text-ds-muted text-sm">Learn German easily in Bengali & English.</p>
+            <p className={`mt-3 text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+              {isBengali
+                ? "জার্মান ভাষা শিখুন সহজে বাংলা ও ইংরেজিতে।"
+                : "Learn German easily in Bengali & English."}
+            </p>
+            <p className={`mt-1 text-ds-muted text-sm ${isBengali ? "" : "font-bangla"}`}>
+              {isBengali
+                ? "Learn German easily in Bengali & English."
+                : "জার্মান ভাষা শিখুন সহজে বাংলা ও ইংরেজিতে।"}
+            </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-ds-text font-semibold mb-4">Quick Links</h3>
+            <h3 className={`text-ds-text font-semibold mb-4 ${isBengali ? "font-bangla" : ""}`}>
+              {t("footer.quickLinks")}
+            </h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/courses" className="text-ds-muted hover:text-ds-text transition-colors text-sm">
-                  Courses
+                <Link
+                  to="/courses"
+                  className={`text-ds-muted hover:text-ds-text transition-colors text-sm ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
+                >
+                  {t("nav.courses")}
                 </Link>
               </li>
               <li>
-                <Link to="/vocabulary" className="text-ds-muted hover:text-ds-text transition-colors text-sm">
-                  Vocabulary
+                <Link
+                  to="/vocabulary"
+                  className={`text-ds-muted hover:text-ds-text transition-colors text-sm ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
+                >
+                  {t("nav.vocabulary")}
                 </Link>
               </li>
               <li>
-                <Link to="/practice" className="text-ds-muted hover:text-ds-text transition-colors text-sm">
-                  Practice
+                <Link
+                  to="/practice"
+                  className={`text-ds-muted hover:text-ds-text transition-colors text-sm ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
+                >
+                  {t("nav.practice")}
                 </Link>
               </li>
             </ul>
@@ -43,33 +72,43 @@ const Footer = () => {
 
           {/* Levels */}
           <div>
-            <h3 className="text-ds-text font-semibold mb-4">Levels</h3>
+            <h3 className={`text-ds-text font-semibold mb-4 ${isBengali ? "font-bangla" : ""}`}>
+              {t("footer.levels")}
+            </h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   to="/courses?level=A1"
-                  className="text-ds-muted hover:text-ds-text transition-colors text-sm"
+                  className={`text-ds-muted hover:text-ds-text transition-colors text-sm ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
                 >
-                  A1 - Beginner
+                  A1 - {isBengali ? "শুরু" : "Beginner"}
                 </Link>
               </li>
               <li>
                 <Link
                   to="/courses?level=A2"
-                  className="text-ds-muted hover:text-ds-text transition-colors text-sm"
+                  className={`text-ds-muted hover:text-ds-text transition-colors text-sm ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
                 >
-                  A2 - Elementary
+                  A2 - {isBengali ? "প্রাথমিক" : "Elementary"}
                 </Link>
               </li>
               <li>
-                <span className="text-ds-border text-sm">B1 - Coming Soon</span>
+                <span className={`text-ds-border text-sm ${isBengali ? "font-bangla" : ""}`}>
+                  B1 - {t("courses.comingSoon")}
+                </span>
               </li>
             </ul>
           </div>
 
           {/* Contact & Social */}
           <div>
-            <h3 className="text-ds-text font-semibold mb-4">Connect</h3>
+            <h3 className={`text-ds-text font-semibold mb-4 ${isBengali ? "font-bangla" : ""}`}>
+              {t("footer.connect")}
+            </h3>
             <ul className="space-y-2">
               <li>
                 <a
@@ -116,9 +155,11 @@ const Footer = () => {
       <div className="border-t border-ds-border/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-            <p className="text-ds-muted text-sm">© {currentYear} DeutschShikhi. All rights reserved.</p>
-            <p className="text-ds-muted text-sm flex items-center gap-1">
-              Made with <HiOutlineHeart className="w-4 h-4 text-red-400" /> by{" "}
+            <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+              © {currentYear} DeutschShikhi. {t("footer.allRights")}
+            </p>
+            <p className={`text-ds-muted text-sm flex items-center gap-1 ${isBengali ? "font-bangla" : ""}`}>
+              {t("footer.madeWith")} <HiOutlineHeart className="w-4 h-4 text-red-400" /> {t("footer.by")}{" "}
               <a
                 href="https://github.com/SarwarMorshad"
                 target="_blank"
@@ -128,7 +169,9 @@ const Footer = () => {
                 Shovon
               </a>
             </p>
-            <p className="text-ds-border text-xs">Vocabulary data partially sourced from Wiktionary.</p>
+            <p className={`text-ds-border text-xs ${isBengali ? "font-bangla" : ""}`}>
+              {t("footer.dataSource")}
+            </p>
           </div>
         </div>
       </div>

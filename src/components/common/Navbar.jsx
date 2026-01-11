@@ -1,6 +1,9 @@
 import { useContext, useState, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AuthContext } from "../../context/AuthContext";
+import useLanguage from "../../hooks/useLanguage";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 import axios from "axios";
 import {
   HiOutlineMenuAlt3,
@@ -19,9 +22,11 @@ import {
 } from "react-icons/hi";
 
 const Navbar = () => {
+  const { t } = useTranslation();
   const { user, logOut } = useContext(AuthContext);
+  const { currentLanguage, isBengali, changeLanguage } = useLanguage();
+  const axiosSecure = useAxiosSecure();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [language, setLanguage] = useState("bn");
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Check if user is admin
@@ -47,8 +52,21 @@ const Navbar = () => {
     checkAdminRole();
   }, [user]);
 
-  const toggleLanguage = () => {
-    setLanguage((prev) => (prev === "bn" ? "en" : "bn"));
+  // Toggle language - saves to DB if user is logged in
+  const toggleLanguage = async () => {
+    const newLang = currentLanguage === "bn" ? "en" : "bn";
+
+    // Change language immediately (updates i18n + localStorage)
+    changeLanguage(newLang);
+
+    // If user is logged in, also save to database
+    if (user) {
+      try {
+        await axiosSecure.patch("/users/me/language", { language: newLang });
+      } catch (error) {
+        console.error("Error saving language preference:", error);
+      }
+    }
   };
 
   const handleLogout = async () => {
@@ -63,22 +81,22 @@ const Navbar = () => {
 
   // Navigation links
   const publicLinks = [
-    { to: "/", label: { bn: "হোম", en: "Home" }, icon: HiOutlineHome },
-    { to: "/courses", label: { bn: "কোর্স", en: "Courses" }, icon: HiOutlineBookOpen },
-    { to: "/vocabulary", label: { bn: "শব্দভান্ডার", en: "Vocabulary" }, icon: HiOutlineTranslate },
-    { to: "/practice", label: { bn: "অনুশীলন", en: "Practice" }, icon: HiOutlineMicrophone },
+    { to: "/", label: t("nav.home"), icon: HiOutlineHome },
+    { to: "/courses", label: t("nav.courses"), icon: HiOutlineBookOpen },
+    { to: "/vocabulary", label: t("nav.vocabulary"), icon: HiOutlineTranslate },
+    { to: "/practice", label: t("nav.practice"), icon: HiOutlineMicrophone },
   ];
 
   // Different dropdown links based on role
   const userDropdownLinks = isAdmin
     ? [
-        { to: "/admin", label: { bn: "অ্যাডমিন প্যানেল", en: "Admin Panel" }, icon: HiOutlineViewGrid },
-        { to: "/admin/settings", label: { bn: "সেটিংস", en: "Settings" }, icon: HiOutlineCog },
+        { to: "/admin", label: t("nav.admin"), icon: HiOutlineViewGrid },
+        { to: "/admin/settings", label: "Settings", icon: HiOutlineCog },
       ]
     : [
-        { to: "/dashboard", label: { bn: "ড্যাশবোর্ড", en: "Dashboard" }, icon: HiOutlineChartBar },
-        { to: "/progress", label: { bn: "অগ্রগতি", en: "Progress" }, icon: HiOutlineChartBar },
-        { to: "/profile", label: { bn: "প্রোফাইল", en: "Profile" }, icon: HiOutlineUser },
+        { to: "/dashboard", label: t("nav.dashboard"), icon: HiOutlineChartBar },
+        { to: "/progress", label: t("nav.progress"), icon: HiOutlineChartBar },
+        { to: "/profile", label: t("nav.profile"), icon: HiOutlineUser },
       ];
 
   const navLinkClass = ({ isActive }) =>
@@ -104,9 +122,7 @@ const Navbar = () => {
             {publicLinks.map((link) => (
               <NavLink key={link.to} to={link.to} className={navLinkClass}>
                 <link.icon className="w-5 h-5" />
-                <span className={language === "bn" ? "font-bangla" : "font-inter"}>
-                  {link.label[language]}
-                </span>
+                <span className={isBengali ? "font-bangla" : "font-inter"}>{link.label}</span>
               </NavLink>
             ))}
           </div>
@@ -119,7 +135,7 @@ const Navbar = () => {
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-ds-surface text-ds-text text-sm hover:bg-ds-border transition-colors"
             >
               <HiOutlineTranslate className="w-4 h-4" />
-              <span className="font-medium">{language === "bn" ? "EN" : "বাং"}</span>
+              <span className="font-medium">{isBengali ? "EN" : "বাং"}</span>
             </button>
 
             {/* Auth */}
@@ -155,24 +171,24 @@ const Navbar = () => {
                     <li key={link.to}>
                       <Link
                         to={link.to}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-ds-text hover:bg-ds-bg transition-colors"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-ds-muted hover:text-ds-text hover:bg-ds-bg transition-colors ${
+                          isBengali ? "font-bangla" : ""
+                        }`}
                       >
                         <link.icon className="w-5 h-5" />
-                        <span className={language === "bn" ? "font-bangla" : "font-inter"}>
-                          {link.label[language]}
-                        </span>
+                        {link.label}
                       </Link>
                     </li>
                   ))}
-                  <li className="border-t border-ds-border/50 mt-2 pt-2">
+                  <li className="border-t border-ds-border/30 mt-2 pt-2">
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-red-400 hover:bg-ds-bg w-full transition-colors"
+                      className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors ${
+                        isBengali ? "font-bangla" : ""
+                      }`}
                     >
                       <HiOutlineLogout className="w-5 h-5" />
-                      <span className={language === "bn" ? "font-bangla" : "font-inter"}>
-                        {language === "bn" ? "লগ আউট" : "Logout"}
-                      </span>
+                      {t("nav.logout")}
                     </button>
                   </li>
                 </ul>
@@ -181,21 +197,21 @@ const Navbar = () => {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="flex items-center gap-1 px-4 py-2 rounded-lg text-ds-text hover:bg-ds-surface transition-colors"
+                  className={`flex items-center gap-1 px-4 py-2 rounded-lg text-ds-muted hover:text-ds-text transition-colors ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
                 >
                   <HiOutlineLogin className="w-5 h-5" />
-                  <span className={language === "bn" ? "font-bangla" : "font-inter"}>
-                    {language === "bn" ? "লগইন" : "Login"}
-                  </span>
+                  {t("nav.login")}
                 </Link>
                 <Link
                   to="/register"
-                  className="flex items-center gap-1 px-4 py-2 rounded-lg bg-ds-surface text-ds-text hover:bg-ds-border transition-colors"
+                  className={`flex items-center gap-1 px-4 py-2 rounded-lg bg-ds-text text-ds-bg hover:shadow-lg transition-all ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
                 >
                   <HiOutlineUserAdd className="w-5 h-5" />
-                  <span className={language === "bn" ? "font-bangla" : "font-inter"}>
-                    {language === "bn" ? "রেজিস্টার" : "Register"}
-                  </span>
+                  {t("nav.register")}
                 </Link>
               </div>
             )}
@@ -204,7 +220,7 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-ds-text hover:bg-ds-surface transition-colors"
+            className="md:hidden p-2 rounded-lg text-ds-muted hover:text-ds-text hover:bg-ds-surface transition-colors"
           >
             {isMenuOpen ? <HiOutlineX className="w-6 h-6" /> : <HiOutlineMenuAlt3 className="w-6 h-6" />}
           </button>
@@ -213,78 +229,82 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-ds-bg border-t border-ds-border/30 animate-fade-in">
+        <div className="md:hidden border-t border-ds-border/30 bg-ds-bg/95 backdrop-blur-md">
           <div className="px-4 py-4 space-y-2">
-            {/* Language Toggle */}
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-ds-surface text-ds-text"
-            >
-              <HiOutlineTranslate className="w-5 h-5" />
-              <span>{language === "bn" ? "Switch to English" : "বাংলায় দেখুন"}</span>
-            </button>
-
-            {/* Public Links */}
             {publicLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 onClick={() => setIsMenuOpen(false)}
-                className={navLinkClass}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-ds-surface text-ds-text"
+                      : "text-ds-muted hover:text-ds-text hover:bg-ds-surface/50"
+                  } ${isBengali ? "font-bangla" : ""}`
+                }
               >
                 <link.icon className="w-5 h-5" />
-                <span className={language === "bn" ? "font-bangla" : "font-inter"}>
-                  {link.label[language]}
-                </span>
+                {link.label}
               </NavLink>
             ))}
 
-            {/* User Links */}
-            {user && (
-              <div className="border-t border-ds-border/30 my-2 pt-2">
-                {userDropdownLinks.map((link) => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={navLinkClass}
-                  >
-                    <link.icon className="w-5 h-5" />
-                    <span className={language === "bn" ? "font-bangla" : "font-inter"}>
-                      {link.label[language]}
-                    </span>
-                  </NavLink>
-                ))}
-              </div>
-            )}
+            <div className="border-t border-ds-border/30 my-4 pt-4">
+              {/* Language Toggle */}
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-ds-muted hover:text-ds-text hover:bg-ds-surface/50 transition-colors"
+              >
+                <HiOutlineTranslate className="w-5 h-5" />
+                <span>{isBengali ? "Switch to English" : "বাংলায় দেখুন"}</span>
+              </button>
 
-            {/* Auth */}
-            <div className="border-t border-ds-border/30 pt-2 mt-2">
               {user ? (
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-red-400 hover:bg-ds-surface transition-colors"
-                >
-                  <HiOutlineLogout className="w-5 h-5" />
-                  <span>{language === "bn" ? "লগ আউট" : "Logout"}</span>
-                </button>
+                <>
+                  {userDropdownLinks.map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg text-ds-muted hover:text-ds-text hover:bg-ds-surface/50 transition-colors ${
+                        isBengali ? "font-bangla" : ""
+                      }`}
+                    >
+                      <link.icon className="w-5 h-5" />
+                      {link.label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={handleLogout}
+                    className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors ${
+                      isBengali ? "font-bangla" : ""
+                    }`}
+                  >
+                    <HiOutlineLogout className="w-5 h-5" />
+                    {t("nav.logout")}
+                  </button>
+                </>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="space-y-2">
                   <Link
                     to="/login"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-ds-border text-ds-text"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-ds-muted hover:text-ds-text hover:bg-ds-surface/50 transition-colors ${
+                      isBengali ? "font-bangla" : ""
+                    }`}
                   >
                     <HiOutlineLogin className="w-5 h-5" />
-                    <span>{language === "bn" ? "লগইন" : "Login"}</span>
+                    {t("nav.login")}
                   </Link>
                   <Link
                     to="/register"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-ds-surface text-ds-text"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg bg-ds-text text-ds-bg ${
+                      isBengali ? "font-bangla" : ""
+                    }`}
                   >
                     <HiOutlineUserAdd className="w-5 h-5" />
-                    <span>{language === "bn" ? "রেজিস্টার" : "Register"}</span>
+                    {t("nav.register")}
                   </Link>
                 </div>
               )}

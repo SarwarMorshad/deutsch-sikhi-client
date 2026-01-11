@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 import {
   HiOutlinePlay,
   HiOutlineBookOpen,
@@ -7,16 +9,19 @@ import {
   HiOutlineClipboardCheck,
 } from "react-icons/hi";
 
-const sections = [
-  { id: "warmup", label: "Warm-up", icon: HiOutlinePlay },
-  { id: "vocabulary", label: "Vocabulary", icon: HiOutlineBookOpen },
-  { id: "grammar", label: "Grammar", icon: HiOutlineLightBulb },
-  { id: "practice", label: "Practice", icon: HiOutlinePuzzle },
-  { id: "conversation", label: "Conversation", icon: HiOutlineChatAlt2 },
-  { id: "quiz", label: "Quiz", icon: HiOutlineClipboardCheck },
-];
-
 const SectionNav = ({ activeSection, onSectionChange }) => {
+  const { t } = useTranslation();
+  const { isBengali } = useLanguage();
+
+  const sections = [
+    { id: "warmup", labelKey: "warmup", icon: HiOutlinePlay },
+    { id: "vocabulary", labelKey: "vocabulary", icon: HiOutlineBookOpen },
+    { id: "grammar", labelKey: "grammar", icon: HiOutlineLightBulb },
+    { id: "practice", labelKey: "practice", icon: HiOutlinePuzzle },
+    { id: "conversation", labelKey: "conversation", icon: HiOutlineChatAlt2 },
+    { id: "quiz", labelKey: "quiz", icon: HiOutlineClipboardCheck },
+  ];
+
   return (
     <div className="flex gap-1 mb-6 p-1 bg-ds-surface/30 rounded-xl overflow-x-auto">
       {sections.map((section) => (
@@ -30,7 +35,9 @@ const SectionNav = ({ activeSection, onSectionChange }) => {
           }`}
         >
           <section.icon className="w-5 h-5" />
-          <span className="text-xs">{section.label}</span>
+          <span className={`text-xs ${isBengali ? "font-bangla" : ""}`}>
+            {t(`lesson.sections.${section.labelKey}`)}
+          </span>
         </button>
       ))}
     </div>

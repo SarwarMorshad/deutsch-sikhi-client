@@ -1,7 +1,11 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 
 const Hero = () => {
+  const { t } = useTranslation();
+  const { isBengali } = useLanguage();
   const [activeWord, setActiveWord] = useState(0);
 
   // Floating German words that cycle
@@ -56,19 +60,38 @@ const Hero = () => {
               <div>
                 {/* Main Heading - Stacked */}
                 <div className="space-y-2">
-                  <h1 className="text-5xl md:text-7xl font-black text-ds-text leading-none">Learn</h1>
-                  <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-ds-muted to-ds-border leading-none">
-                    German
-                  </h1>
-                  <h1 className="text-3xl md:text-4xl font-bold text-ds-text font-bangla leading-tight">
-                    বাংলায় শিখুন
-                  </h1>
+                  {isBengali ? (
+                    <>
+                      <h1 className="text-5xl md:text-7xl font-black text-ds-text leading-none font-bangla">
+                        জার্মান
+                      </h1>
+                      <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-ds-muted to-ds-border leading-none font-bangla">
+                        শিখুন
+                      </h1>
+                      <h1 className="text-3xl md:text-4xl font-bold text-ds-text leading-tight">
+                        Learn German
+                      </h1>
+                    </>
+                  ) : (
+                    <>
+                      <h1 className="text-5xl md:text-7xl font-black text-ds-text leading-none">Learn</h1>
+                      <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-ds-muted to-ds-border leading-none">
+                        German
+                      </h1>
+                      <h1 className="text-3xl md:text-4xl font-bold text-ds-text font-bangla leading-tight">
+                        বাংলায় শিখুন
+                      </h1>
+                    </>
+                  )}
                 </div>
 
                 {/* Description */}
-                <p className="mt-6 text-ds-muted text-lg max-w-sm leading-relaxed">
-                  The first German learning platform designed specifically for
-                  <span className="text-ds-text font-semibold"> Bengali speakers</span>.
+                <p
+                  className={`mt-6 text-ds-muted text-lg max-w-sm leading-relaxed ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
+                >
+                  {t("home.hero.description")}
                 </p>
               </div>
             </div>
@@ -77,16 +100,20 @@ const Hero = () => {
             <div className="flex flex-wrap gap-3 pl-0 md:pl-12">
               <Link
                 to="/courses"
-                className="group relative px-8 py-4 bg-ds-text text-ds-bg font-bold rounded-full overflow-hidden transition-transform hover:scale-105"
+                className={`group relative px-8 py-4 bg-ds-text text-ds-bg font-bold rounded-full overflow-hidden transition-transform hover:scale-105 ${
+                  isBengali ? "font-bangla" : ""
+                }`}
               >
-                <span className="relative z-10">Start Journey →</span>
+                <span className="relative z-10">{t("home.hero.startLearning")} →</span>
                 <div className="absolute inset-0 bg-ds-muted translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
               </Link>
               <Link
                 to="/vocabulary"
-                className="px-8 py-4 border-2 border-ds-border text-ds-text font-bold rounded-full hover:bg-ds-surface/50 transition-all"
+                className={`px-8 py-4 border-2 border-ds-border text-ds-text font-bold rounded-full hover:bg-ds-surface/50 transition-all ${
+                  isBengali ? "font-bangla" : ""
+                }`}
               >
-                Explore Words
+                {t("home.hero.exploreCourses")}
               </Link>
             </div>
 
@@ -94,17 +121,19 @@ const Hero = () => {
             <div className="flex items-center gap-6 pl-0 md:pl-12 pt-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-ds-muted text-sm">A1 → A2 Levels</span>
+                <span className="text-ds-muted text-sm">A1 → A2</span>
               </div>
               <div className="w-px h-4 bg-ds-border"></div>
-              <span className="text-ds-muted text-sm">500+ Words</span>
+              <span className="text-ds-muted text-sm">500+ {isBengali ? "শব্দ" : "Words"}</span>
               <div className="w-px h-4 bg-ds-border"></div>
-              <span className="text-ds-muted text-sm">Free Forever</span>
+              <span className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                {isBengali ? "সম্পূর্ণ বিনামূল্যে" : "Free Forever"}
+              </span>
             </div>
           </div>
 
           {/* Right Side - Interactive Word Display (7 cols) */}
-          <div className="lg:col-span-7 relative h-125 hidden lg:block">
+          <div className="lg:col-span-7 relative h-[500px] hidden lg:block">
             {/* Central Word Display - Glass Card */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
               <div className="relative">
@@ -114,8 +143,12 @@ const Hero = () => {
                 {/* Main Card */}
                 <div className="relative bg-ds-bg/80 backdrop-blur-xl border border-ds-border/50 rounded-3xl p-10 min-w-[320px]">
                   <div className="text-center space-y-4">
-                    <span className="text-ds-muted text-sm tracking-widest uppercase">
-                      Word of the moment
+                    <span
+                      className={`text-ds-muted text-sm tracking-widest uppercase ${
+                        isBengali ? "font-bangla" : ""
+                      }`}
+                    >
+                      {isBengali ? "এই মুহূর্তের শব্দ" : "Word of the moment"}
                     </span>
 
                     {/* German Word */}

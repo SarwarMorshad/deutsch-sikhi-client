@@ -1,13 +1,22 @@
 import { HiOutlineVolumeUp } from "react-icons/hi";
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 
 const Features = () => {
+  const { t } = useTranslation();
+  const { isBengali } = useLanguage();
+
   return (
     <section className="py-24 bg-ds-surface/20 relative overflow-hidden">
       {/* Section Label */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
         <div className="flex items-center gap-4">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-ds-border to-transparent"></div>
-          <span className="text-ds-muted text-sm tracking-[0.3em] uppercase">Why DeutschShikhi</span>
+          <span
+            className={`text-ds-muted text-sm tracking-[0.3em] uppercase ${isBengali ? "font-bangla" : ""}`}
+          >
+            {t("home.features.title")} DeutschShikhi
+          </span>
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-ds-border to-transparent"></div>
         </div>
       </div>
@@ -24,12 +33,22 @@ const Features = () => {
               </div>
 
               <div className="relative z-10">
-                <div className="inline-flex px-4 py-1 bg-ds-muted/10 rounded-full text-ds-muted text-sm mb-6">
-                  Core Feature
+                <div
+                  className={`inline-flex px-4 py-1 bg-ds-muted/10 rounded-full text-ds-muted text-sm mb-6 ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
+                >
+                  {isBengali ? "মূল বৈশিষ্ট্য" : "Core Feature"}
                 </div>
-                <h3 className="text-3xl md:text-4xl font-bold text-ds-text mb-4">Trilingual Learning</h3>
-                <p className="text-ds-muted text-lg max-w-md mb-8">
-                  Every word, every sentence — explained in German, Bengali, and English simultaneously.
+                <h3
+                  className={`text-3xl md:text-4xl font-bold text-ds-text mb-4 ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
+                >
+                  {t("home.features.bengaliSupport.title")}
+                </h3>
+                <p className={`text-ds-muted text-lg max-w-md mb-8 ${isBengali ? "font-bangla" : ""}`}>
+                  {t("home.features.bengaliSupport.description")}
                 </p>
 
                 {/* Demo Card */}
@@ -76,9 +95,11 @@ const Features = () => {
               </div>
 
               <div className="mt-16">
-                <h3 className="text-xl font-bold text-ds-text mb-2">Native Audio</h3>
-                <p className="text-ds-muted text-sm">
-                  Listen to authentic German pronunciation for every word.
+                <h3 className={`text-xl font-bold text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                  {t("home.features.audio.title")}
+                </h3>
+                <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                  {t("home.features.audio.description")}
                 </p>
               </div>
             </div>
@@ -98,8 +119,14 @@ const Features = () => {
                 ))}
               </div>
 
-              <h3 className="text-xl font-bold text-ds-text mb-2">Track Progress</h3>
-              <p className="text-ds-muted text-sm">Visual insights into your learning journey.</p>
+              <h3 className={`text-xl font-bold text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                {isBengali ? "অগ্রগতি দেখুন" : "Track Progress"}
+              </h3>
+              <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                {isBengali
+                  ? "আপনার শেখার যাত্রার ভিজ্যুয়াল ইনসাইট।"
+                  : "Visual insights into your learning journey."}
+              </p>
             </div>
           </div>
 
@@ -123,14 +150,16 @@ const Features = () => {
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-ds-text mb-2">Structured Path</h3>
-              <p className="text-ds-muted text-sm">
-                Clear progression from complete beginner to intermediate level.
+              <h3 className={`text-xl font-bold text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                {t("home.features.structured.title")}
+              </h3>
+              <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                {t("home.features.structured.description")}
               </p>
             </div>
           </div>
 
-          {/* Practice Rooms (spans 6 cols) */}
+          {/* Interactive Feature (spans 6 cols) */}
           <div className="col-span-12 md:col-span-6 group">
             <div className="h-full bg-gradient-to-br from-pink-500/10 to-rose-600/10 p-8 rounded-[2rem] border border-pink-500/20 hover:border-pink-500/40 transition-all duration-500">
               {/* User Avatars */}
@@ -147,13 +176,17 @@ const Features = () => {
                 </div>
                 <div className="ml-4 flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-ds-muted text-sm">Live Now</span>
+                  <span className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                    {isBengali ? "এখন সক্রিয়" : "Live Now"}
+                  </span>
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-ds-text mb-2">Practice Rooms</h3>
-              <p className="text-ds-muted text-sm">
-                Join live video sessions to practice speaking with others.
+              <h3 className={`text-xl font-bold text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                {t("home.features.interactive.title")}
+              </h3>
+              <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                {t("home.features.interactive.description")}
               </p>
             </div>
           </div>

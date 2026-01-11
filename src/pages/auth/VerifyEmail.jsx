@@ -1,12 +1,22 @@
 import { useContext, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 import { AuthContext } from "../../context/AuthContext";
 import { sendEmailVerification } from "firebase/auth";
-import { HiOutlineMail, HiOutlineRefresh, HiOutlineCheckCircle, HiOutlineLogout } from "react-icons/hi";
+import {
+  HiOutlineMail,
+  HiOutlineRefresh,
+  HiOutlineCheckCircle,
+  HiOutlineLogout,
+  HiOutlineGlobe,
+} from "react-icons/hi";
 import toast from "react-hot-toast";
 import { authAPI } from "../../utils/api";
 
 const VerifyEmail = () => {
+  const { t, i18n } = useTranslation();
+  const { isBengali } = useLanguage();
   const { user, logOut } = useContext(AuthContext);
   const navigate = useNavigate();
   const [resending, setResending] = useState(false);
@@ -34,14 +44,14 @@ const VerifyEmail = () => {
     setResending(true);
     try {
       await sendEmailVerification(user);
-      toast.success("Verification email sent!");
+      toast.success(t("auth.verifyEmail.emailSent"));
       setCountdown(60); // 60 second cooldown
     } catch (error) {
       console.error(error);
       if (error.code === "auth/too-many-requests") {
-        toast.error("Too many requests. Please try again later.");
+        toast.error(t("auth.verifyEmail.tooManyRequests"));
       } else {
-        toast.error("Failed to send email. Please try again.");
+        toast.error(t("auth.verifyEmail.sendFailed"));
       }
     } finally {
       setResending(false);
@@ -59,7 +69,7 @@ const VerifyEmail = () => {
             name: user.displayName || "",
             photoURL: user.photoURL || "",
           });
-          toast.success("Email verified successfully!");
+          toast.success(t("auth.verifyEmail.verified"));
           navigate("/");
         } catch (error) {
           // If user already exists, that's fine
@@ -67,11 +77,11 @@ const VerifyEmail = () => {
           if (errorMsg !== "User already registered.") {
             console.error("Error saving user:", errorMsg);
           }
-          toast.success("Email verified successfully!");
+          toast.success(t("auth.verifyEmail.verified"));
           navigate("/");
         }
       } else {
-        toast.error("Email not verified yet. Please check your inbox.");
+        toast.error(t("auth.verifyEmail.notVerifiedYet"));
       }
     }
   };
@@ -88,6 +98,23 @@ const VerifyEmail = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8 relative">
+      {/* Language Toggle - Top Right */}
+      <div className="absolute top-6 right-6 z-20">
+        <button
+          onClick={() => {
+            const newLang = isBengali ? "en" : "bn";
+            i18n.changeLanguage(newLang);
+            localStorage.setItem("deutschshikhi-language", newLang);
+          }}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-ds-surface/50 border border-ds-border/30 text-ds-muted hover:text-ds-text hover:bg-ds-surface transition-all"
+        >
+          <HiOutlineGlobe className="w-4 h-4" />
+          <span className={`text-sm font-medium ${isBengali ? "" : "font-bangla"}`}>
+            {isBengali ? "EN" : "বাং"}
+          </span>
+        </button>
+      </div>
+
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div
@@ -119,8 +146,14 @@ const VerifyEmail = () => {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-bold text-ds-text text-center mb-2">Verify Your Email</h1>
-          <p className="text-ds-muted text-center mb-6">We've sent a verification link to</p>
+          <h1
+            className={`text-2xl font-bold text-ds-text text-center mb-2 ${isBengali ? "font-bangla" : ""}`}
+          >
+            {t("auth.verifyEmail.title")}
+          </h1>
+          <p className={`text-ds-muted text-center mb-6 ${isBengali ? "font-bangla" : ""}`}>
+            {t("auth.verifyEmail.sentTo")}
+          </p>
 
           {/* Email Display */}
           <div className="bg-ds-bg/50 rounded-xl px-4 py-3 mb-6 text-center">
@@ -129,23 +162,23 @@ const VerifyEmail = () => {
 
           {/* Instructions */}
           <div className="space-y-3 mb-8">
-            <div className="flex items-start gap-3 text-sm text-ds-muted">
+            <div className={`flex items-start gap-3 text-sm text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
               <span className="w-6 h-6 rounded-full bg-ds-surface flex items-center justify-center text-ds-text font-bold text-xs flex-shrink-0">
                 1
               </span>
-              <span>Check your email inbox (and spam folder)</span>
+              <span>{t("auth.verifyEmail.step1")}</span>
             </div>
-            <div className="flex items-start gap-3 text-sm text-ds-muted">
+            <div className={`flex items-start gap-3 text-sm text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
               <span className="w-6 h-6 rounded-full bg-ds-surface flex items-center justify-center text-ds-text font-bold text-xs flex-shrink-0">
                 2
               </span>
-              <span>Click the verification link in the email</span>
+              <span>{t("auth.verifyEmail.step2")}</span>
             </div>
-            <div className="flex items-start gap-3 text-sm text-ds-muted">
+            <div className={`flex items-start gap-3 text-sm text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
               <span className="w-6 h-6 rounded-full bg-ds-surface flex items-center justify-center text-ds-text font-bold text-xs flex-shrink-0">
                 3
               </span>
-              <span>Come back here and click "I've Verified"</span>
+              <span>{t("auth.verifyEmail.step3")}</span>
             </div>
           </div>
 
@@ -154,53 +187,61 @@ const VerifyEmail = () => {
             {/* Verify Button */}
             <button
               onClick={handleRefresh}
-              className="group w-full py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-ds-muted/20 transition-all"
+              className={`group w-full py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-ds-muted/20 transition-all ${
+                isBengali ? "font-bangla" : ""
+              }`}
             >
               <HiOutlineCheckCircle className="w-5 h-5" />
-              I've Verified My Email
+              {t("auth.verifyEmail.iVerified")}
             </button>
 
             {/* Resend Button */}
             <button
               onClick={handleResend}
               disabled={resending || countdown > 0}
-              className="w-full py-3 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold flex items-center justify-center gap-2 hover:bg-ds-surface/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full py-3 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold flex items-center justify-center gap-2 hover:bg-ds-surface/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                isBengali ? "font-bangla" : ""
+              }`}
             >
               <HiOutlineRefresh className={`w-5 h-5 ${resending ? "animate-spin" : ""}`} />
               {countdown > 0
-                ? `Resend in ${countdown}s`
+                ? `${t("auth.verifyEmail.resendIn")} ${countdown}s`
                 : resending
-                ? "Sending..."
-                : "Resend Verification Email"}
+                ? t("auth.verifyEmail.sending")
+                : t("auth.verifyEmail.resend")}
             </button>
           </div>
 
           {/* Divider */}
           <div className="relative flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-ds-border/30"></div>
-            <span className="text-ds-muted text-sm">or</span>
+            <span className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+              {t("common.or")}
+            </span>
             <div className="flex-1 h-px bg-ds-border/30"></div>
           </div>
 
           {/* Logout / Use different email */}
           <button
             onClick={handleLogout}
-            className="w-full py-3 text-ds-muted text-sm flex items-center justify-center gap-2 hover:text-ds-text transition-colors"
+            className={`w-full py-3 text-ds-muted text-sm flex items-center justify-center gap-2 hover:text-ds-text transition-colors ${
+              isBengali ? "font-bangla" : ""
+            }`}
           >
             <HiOutlineLogout className="w-4 h-4" />
-            Sign out and use a different email
+            {t("auth.verifyEmail.useDifferentEmail")}
           </button>
         </div>
 
         {/* Help Text */}
-        <p className="mt-6 text-center text-ds-muted text-sm">
-          Didn't receive the email? Check your spam folder or{" "}
+        <p className={`mt-6 text-center text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+          {t("auth.verifyEmail.didntReceive")}{" "}
           <button
             onClick={handleResend}
             disabled={countdown > 0}
             className="text-ds-text hover:underline disabled:opacity-50"
           >
-            click here to resend
+            {t("auth.verifyEmail.clickToResend")}
           </button>
         </p>
       </div>

@@ -1,6 +1,8 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
+import { AuthContext } from "../../context/AuthContext";
 import { sendEmailVerification } from "firebase/auth";
 import {
   HiOutlineMail,
@@ -13,14 +15,16 @@ import {
   HiOutlineArrowRight,
   HiOutlineArrowLeft,
   HiOutlineX,
+  HiOutlineGlobe,
 } from "react-icons/hi";
 import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 import registerSvg from "../../assets/register.svg";
 import { authAPI } from "../../utils/api";
-import { AuthContext } from "../../context/AuthContext";
 
 const Register = () => {
+  const { t, i18n } = useTranslation();
+  const { isBengali } = useLanguage();
   const { createUser, updateUserProfile, signInWithGoogle } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -45,12 +49,12 @@ const Register = () => {
 
   // Password validation rules
   const passwordRules = [
-    { label: "At least 6 characters", test: (p) => p.length >= 6 },
-    { label: "One uppercase letter (A-Z)", test: (p) => /[A-Z]/.test(p) },
-    { label: "One lowercase letter (a-z)", test: (p) => /[a-z]/.test(p) },
-    { label: "One number (0-9)", test: (p) => /[0-9]/.test(p) },
+    { label: t("auth.register.passwordRules.minLength"), test: (p) => p.length >= 6 },
+    { label: t("auth.register.passwordRules.uppercase"), test: (p) => /[A-Z]/.test(p) },
+    { label: t("auth.register.passwordRules.lowercase"), test: (p) => /[a-z]/.test(p) },
+    { label: t("auth.register.passwordRules.number"), test: (p) => /[0-9]/.test(p) },
     {
-      label: "One special character (!@#$%^&*)",
+      label: t("auth.register.passwordRules.special"),
       test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p),
     },
   ];
@@ -72,13 +76,13 @@ const Register = () => {
     // Validate file type
     const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please upload a valid image (JPG, PNG, GIF, WEBP)");
+      toast.error(t("auth.register.errors.invalidImage"));
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size must be less than 5MB");
+      toast.error(t("auth.register.errors.imageTooLarge"));
       return;
     }
 
@@ -98,13 +102,13 @@ const Register = () => {
       if (data.success) {
         setFormData({ ...formData, photoURL: data.data.display_url });
         setImagePreview(data.data.display_url);
-        toast.success("Image uploaded successfully!");
+        toast.success(t("auth.register.imageUploaded"));
       } else {
-        toast.error("Image upload failed. Please try again.");
+        toast.error(t("auth.register.errors.uploadFailed"));
       }
     } catch (error) {
       console.error("Image upload error:", error);
-      toast.error("Image upload failed. Please try again.");
+      toast.error(t("auth.register.errors.uploadFailed"));
     } finally {
       setImageUploading(false);
     }
@@ -119,11 +123,11 @@ const Register = () => {
   const handleNextStep = () => {
     if (step === 1) {
       if (!formData.name || !formData.email) {
-        toast.error("Please fill in all fields");
+        toast.error(t("auth.register.errors.fillAllFields"));
         return;
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        toast.error("Please enter a valid email");
+        toast.error(t("auth.register.errors.invalidEmail"));
         return;
       }
     }
@@ -138,12 +142,12 @@ const Register = () => {
     e.preventDefault();
 
     if (!isPasswordValid) {
-      toast.error("Password doesn't meet all requirements");
+      toast.error(t("auth.register.errors.passwordRequirements"));
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords don't match");
+      toast.error(t("auth.register.errors.passwordMismatch"));
       return;
     }
 
@@ -159,15 +163,15 @@ const Register = () => {
       // Send email verification
       await sendEmailVerification(result.user);
 
-      toast.success("Account created! Please check your email to verify.");
+      toast.success(t("auth.register.accountCreated"));
       navigate("/verify-email");
     } catch (error) {
       console.error(error);
       if (error.code === "auth/email-already-in-use") {
-        toast.error("Email already in use");
+        toast.error(t("auth.register.errors.emailInUse"));
         setStep(1);
       } else {
-        toast.error("Registration failed. Please try again.");
+        toast.error(t("auth.register.errors.registrationFailed"));
       }
     } finally {
       setLoading(false);
@@ -193,20 +197,45 @@ const Register = () => {
         }
       }
 
-      toast.success("Welcome to DeutschShikhi!");
+      toast.success(t("toast.welcomeToDeutschShikhi"));
       navigate("/");
     } catch (error) {
       console.error(error);
-      toast.error("Google sign-up failed");
+      toast.error(t("auth.errors.googleFailed"));
     } finally {
       setLoading(false);
     }
+  };
+
+  // Password strength labels
+  const getStrengthLabel = () => {
+    if (passwordStrength <= 2) return isBengali ? "দুর্বল" : "Weak";
+    if (passwordStrength <= 3) return isBengali ? "মোটামুটি" : "Fair";
+    if (passwordStrength <= 4) return isBengali ? "ভালো" : "Good";
+    return isBengali ? "শক্তিশালী" : "Strong";
   };
 
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative">
+        {/* Language Toggle - Top Right */}
+        <div className="absolute top-6 right-6 z-20">
+          <button
+            onClick={() => {
+              const newLang = isBengali ? "en" : "bn";
+              i18n.changeLanguage(newLang);
+              localStorage.setItem("deutschshikhi-language", newLang);
+            }}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-ds-surface/50 border border-ds-border/30 text-ds-muted hover:text-ds-text hover:bg-ds-surface transition-all"
+          >
+            <HiOutlineGlobe className="w-4 h-4" />
+            <span className={`text-sm font-medium ${isBengali ? "" : "font-bangla"}`}>
+              {isBengali ? "EN" : "বাং"}
+            </span>
+          </button>
+        </div>
+
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div
@@ -229,11 +258,21 @@ const Register = () => {
 
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-1 bg-gradient-to-r from-ds-muted to-ds-border rounded-full"></div>
-              <span className="text-ds-muted text-sm tracking-widest uppercase">Get Started</span>
+              <span
+                className={`text-ds-muted text-sm tracking-widest uppercase ${
+                  isBengali ? "font-bangla" : ""
+                }`}
+              >
+                {t("auth.register.getStarted")}
+              </span>
             </div>
 
-            <h1 className="text-4xl font-black text-ds-text mb-2">Create Account</h1>
-            <p className="text-ds-muted">Start your German learning journey today</p>
+            <h1 className={`text-4xl font-black text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+              {t("auth.register.createAccount")}
+            </h1>
+            <p className={`text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
+              {t("auth.register.startJourney")}
+            </p>
           </div>
 
           {/* Progress Steps */}
@@ -258,7 +297,9 @@ const Register = () => {
                 )}
               </div>
             ))}
-            <div className="ml-4 text-ds-muted text-sm">Step {step} of 2</div>
+            <div className={`ml-4 text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+              {t("auth.register.step")} {step} {t("auth.register.of")} 2
+            </div>
           </div>
 
           {/* Form */}
@@ -268,7 +309,9 @@ const Register = () => {
               <div className="space-y-6 animate-fade-in">
                 {/* Name Field */}
                 <div className="relative">
-                  <label className="block text-ds-muted text-sm mb-2">Full Name</label>
+                  <label className={`block text-ds-muted text-sm mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                    {t("auth.register.fullName")}
+                  </label>
                   <div
                     className={`relative rounded-xl border-2 transition-all duration-300 ${
                       focusedField === "name"
@@ -287,7 +330,7 @@ const Register = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      placeholder="Enter your name"
+                      placeholder={isBengali ? "আপনার নাম লিখুন" : "Enter your name"}
                       onFocus={() => setFocusedField("name")}
                       onBlur={() => setFocusedField(null)}
                       className="w-full bg-transparent py-4 pl-12 pr-4 text-ds-text placeholder:text-ds-border focus:outline-none"
@@ -297,7 +340,9 @@ const Register = () => {
 
                 {/* Email Field */}
                 <div className="relative">
-                  <label className="block text-ds-muted text-sm mb-2">Email Address</label>
+                  <label className={`block text-ds-muted text-sm mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                    {t("auth.register.email")}
+                  </label>
                   <div
                     className={`relative rounded-xl border-2 transition-all duration-300 ${
                       focusedField === "email"
@@ -326,8 +371,9 @@ const Register = () => {
 
                 {/* Photo Upload Field */}
                 <div className="relative">
-                  <label className="block text-ds-muted text-sm mb-2">
-                    Profile Photo <span className="text-ds-border">(optional)</span>
+                  <label className={`block text-ds-muted text-sm mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                    {t("auth.register.profilePhoto")}{" "}
+                    <span className="text-ds-border">({t("common.optional")})</span>
                   </label>
 
                   {/* Image Preview */}
@@ -363,7 +409,11 @@ const Register = () => {
                       />
                       <div className="py-6 px-4 text-center">
                         {imageUploading ? (
-                          <div className="flex items-center justify-center gap-2 text-ds-muted">
+                          <div
+                            className={`flex items-center justify-center gap-2 text-ds-muted ${
+                              isBengali ? "font-bangla" : ""
+                            }`}
+                          >
                             <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                               <circle
                                 className="opacity-25"
@@ -380,12 +430,14 @@ const Register = () => {
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                               />
                             </svg>
-                            <span>Uploading...</span>
+                            <span>{t("common.uploading")}</span>
                           </div>
                         ) : (
                           <>
                             <HiOutlinePhotograph className="w-8 h-8 mx-auto text-ds-border mb-2" />
-                            <p className="text-ds-muted text-sm">Click or drag to upload image</p>
+                            <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                              {t("auth.register.clickToUpload")}
+                            </p>
                             <p className="text-ds-border text-xs mt-1">JPG, PNG, GIF, WEBP (max 5MB)</p>
                           </>
                         )}
@@ -399,9 +451,11 @@ const Register = () => {
                   type="button"
                   onClick={handleNextStep}
                   disabled={imageUploading}
-                  className="group w-full py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-ds-muted/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`group w-full py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-ds-muted/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isBengali ? "font-bangla" : ""
+                  }`}
                 >
-                  Continue
+                  {t("common.continue")}
                   <HiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
@@ -412,7 +466,9 @@ const Register = () => {
               <div className="space-y-6 animate-fade-in">
                 {/* Password Field */}
                 <div className="relative">
-                  <label className="block text-ds-muted text-sm mb-2">Password</label>
+                  <label className={`block text-ds-muted text-sm mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                    {t("auth.register.password")}
+                  </label>
                   <div
                     className={`relative rounded-xl border-2 transition-all duration-300 ${
                       focusedField === "password"
@@ -431,7 +487,7 @@ const Register = () => {
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      placeholder="Create a password"
+                      placeholder={isBengali ? "একটি পাসওয়ার্ড তৈরি করুন" : "Create a password"}
                       onFocus={() => setFocusedField("password")}
                       onBlur={() => setFocusedField(null)}
                       className="w-full bg-transparent py-4 pl-12 pr-12 text-ds-text placeholder:text-ds-border focus:outline-none"
@@ -455,9 +511,11 @@ const Register = () => {
                       {/* Strength Bar */}
                       <div>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs text-ds-muted">Password Strength</span>
+                          <span className={`text-xs text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
+                            {t("auth.register.passwordStrength")}
+                          </span>
                           <span
-                            className={`text-xs font-medium ${
+                            className={`text-xs font-medium ${isBengali ? "font-bangla" : ""} ${
                               passwordStrength <= 2
                                 ? "text-red-400"
                                 : passwordStrength <= 3
@@ -467,13 +525,7 @@ const Register = () => {
                                 : "text-green-400"
                             }`}
                           >
-                            {passwordStrength <= 2
-                              ? "Weak"
-                              : passwordStrength <= 3
-                              ? "Fair"
-                              : passwordStrength <= 4
-                              ? "Good"
-                              : "Strong"}
+                            {getStrengthLabel()}
                           </span>
                         </div>
                         <div className="flex gap-1">
@@ -504,8 +556,8 @@ const Register = () => {
                             <div
                               key={index}
                               className={`flex items-center gap-2 text-sm transition-all ${
-                                passed ? "text-green-400" : "text-ds-muted"
-                              }`}
+                                isBengali ? "font-bangla" : ""
+                              } ${passed ? "text-green-400" : "text-ds-muted"}`}
                             >
                               {passed ? (
                                 <HiOutlineCheck className="w-4 h-4 flex-shrink-0" />
@@ -523,7 +575,9 @@ const Register = () => {
 
                 {/* Confirm Password Field */}
                 <div className="relative">
-                  <label className="block text-ds-muted text-sm mb-2">Confirm Password</label>
+                  <label className={`block text-ds-muted text-sm mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                    {t("auth.register.confirmPassword")}
+                  </label>
                   <div
                     className={`relative rounded-xl border-2 transition-all duration-300 ${
                       focusedField === "confirmPassword"
@@ -544,7 +598,7 @@ const Register = () => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
-                      placeholder="Confirm your password"
+                      placeholder={isBengali ? "পাসওয়ার্ড নিশ্চিত করুন" : "Confirm your password"}
                       onFocus={() => setFocusedField("confirmPassword")}
                       onBlur={() => setFocusedField(null)}
                       className="w-full bg-transparent py-4 pl-12 pr-4 text-ds-text placeholder:text-ds-border focus:outline-none"
@@ -554,7 +608,9 @@ const Register = () => {
                     )}
                   </div>
                   {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                    <p className="text-red-400 text-xs mt-2">Passwords don't match</p>
+                    <p className={`text-red-400 text-xs mt-2 ${isBengali ? "font-bangla" : ""}`}>
+                      {t("auth.register.errors.passwordMismatch")}
+                    </p>
                   )}
                 </div>
 
@@ -563,15 +619,19 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={handlePrevStep}
-                    className="flex-1 py-4 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold flex items-center justify-center gap-2 hover:bg-ds-surface/30 transition-all"
+                    className={`flex-1 py-4 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold flex items-center justify-center gap-2 hover:bg-ds-surface/30 transition-all ${
+                      isBengali ? "font-bangla" : ""
+                    }`}
                   >
                     <HiOutlineArrowLeft className="w-5 h-5" />
-                    Back
+                    {t("common.back")}
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="group flex-[2] py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg overflow-hidden relative transition-all hover:shadow-xl hover:shadow-ds-muted/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`group flex-[2] py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg overflow-hidden relative transition-all hover:shadow-xl hover:shadow-ds-muted/20 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      isBengali ? "font-bangla" : ""
+                    }`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-ds-muted to-ds-border translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="relative">
@@ -593,10 +653,10 @@ const Register = () => {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                           </svg>
-                          Creating...
+                          {t("auth.register.creating")}
                         </span>
                       ) : (
-                        "Create Account"
+                        t("auth.register.createAccount")
                       )}
                     </span>
                   </button>
@@ -607,7 +667,9 @@ const Register = () => {
             {/* Divider */}
             <div className="relative flex items-center gap-4 my-8">
               <div className="flex-1 h-px bg-ds-border/30"></div>
-              <span className="text-ds-muted text-sm">or</span>
+              <span className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                {t("common.or")}
+              </span>
               <div className="flex-1 h-px bg-ds-border/30"></div>
             </div>
 
@@ -616,18 +678,20 @@ const Register = () => {
               type="button"
               onClick={handleGoogleRegister}
               disabled={loading}
-              className="w-full py-4 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold flex items-center justify-center gap-3 hover:bg-ds-surface/30 hover:border-ds-border transition-all disabled:opacity-50"
+              className={`w-full py-4 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold flex items-center justify-center gap-3 hover:bg-ds-surface/30 hover:border-ds-border transition-all disabled:opacity-50 ${
+                isBengali ? "font-bangla" : ""
+              }`}
             >
               <FcGoogle className="w-6 h-6" />
-              Continue with Google
+              {t("auth.register.continueWithGoogle")}
             </button>
           </form>
 
           {/* Login Link */}
-          <p className="mt-8 text-center text-ds-muted">
-            Already have an account?{" "}
+          <p className={`mt-8 text-center text-ds-muted ${isBengali ? "font-bangla" : ""}`}>
+            {t("auth.register.haveAccount")}{" "}
             <Link to="/login" className="text-ds-text font-semibold hover:underline">
-              Sign in
+              {t("auth.register.signIn")}
             </Link>
           </p>
         </div>
@@ -651,24 +715,32 @@ const Register = () => {
           </div>
 
           {/* Text */}
-          <h2 className="text-3xl font-bold text-ds-text mb-3">Join DeutschShikhi</h2>
-          <p className="text-ds-muted mb-2">Start your German learning journey</p>
-          <p className="text-ds-muted font-bangla">আজই জার্মান শেখা শুরু করুন</p>
+          <h2 className={`text-3xl font-bold text-ds-text mb-3 ${isBengali ? "font-bangla" : ""}`}>
+            {t("auth.register.joinDeutschShikhi")}
+          </h2>
+          <p className={`text-ds-muted mb-2 ${isBengali ? "font-bangla" : ""}`}>
+            {t("auth.register.startJourney")}
+          </p>
+          <p className={`text-ds-muted ${isBengali ? "" : "font-bangla"}`}>
+            {isBengali ? "Start your German learning journey" : "আজই জার্মান শেখা শুরু করুন"}
+          </p>
 
           {/* Features List */}
           <div className="mt-10 space-y-4 text-left max-w-xs mx-auto">
             {[
-              { icon: "🎯", text: "Structured A1-A2 curriculum" },
-              { icon: "🔊", text: "Native German pronunciation" },
-              { icon: "📱", text: "Learn on any device" },
-              { icon: "🆓", text: "100% free, forever" },
+              { icon: "🎯", textKey: "feature1" },
+              { icon: "🔊", textKey: "feature2" },
+              { icon: "📱", textKey: "feature3" },
+              { icon: "🆓", textKey: "feature4" },
             ].map((item, i) => (
               <div
                 key={i}
                 className="flex items-center gap-4 p-3 rounded-xl bg-ds-bg/30 backdrop-blur border border-ds-border/20"
               >
                 <span className="text-2xl">{item.icon}</span>
-                <span className="text-ds-text">{item.text}</span>
+                <span className={`text-ds-text ${isBengali ? "font-bangla" : ""}`}>
+                  {t(`auth.register.features.${item.textKey}`)}
+                </span>
               </div>
             ))}
           </div>

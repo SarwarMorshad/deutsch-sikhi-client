@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 import {
   HiOutlineClipboardCheck,
   HiOutlineCheckCircle,
@@ -12,6 +14,8 @@ import {
 } from "react-icons/hi";
 
 const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
+  const { t } = useTranslation();
+  const { isBengali, getLocalizedContent } = useLanguage();
   const [quizStarted, setQuizStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -89,15 +93,23 @@ const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
       <div className="space-y-6 animate-fade-in">
         <div className="text-center py-16 bg-ds-surface/30 rounded-2xl border border-ds-border/30">
           <HiOutlineClipboardCheck className="w-16 h-16 text-ds-muted mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-ds-text mb-2">📝 Lesson Quiz</h2>
-          <p className="text-ds-muted mb-2">{exercises.length} questions</p>
-          <p className="text-ds-border text-sm mb-6">Score 70% or higher to complete this lesson</p>
+          <h2 className={`text-2xl font-bold text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+            {t("lesson.quiz.title")}
+          </h2>
+          <p className={`text-ds-muted mb-2 ${isBengali ? "font-bangla" : ""}`}>
+            {exercises.length} {t("lesson.quiz.questions")}
+          </p>
+          <p className={`text-ds-border text-sm mb-6 ${isBengali ? "font-bangla" : ""}`}>
+            {t("lesson.quiz.passMessage")}
+          </p>
           <button
             onClick={startQuiz}
             disabled={exercises.length === 0}
-            className="px-8 py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg hover:shadow-xl transition-all disabled:opacity-50"
+            className={`px-8 py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg hover:shadow-xl transition-all disabled:opacity-50 ${
+              isBengali ? "font-bangla" : ""
+            }`}
           >
-            {exercises.length === 0 ? "No Quiz Available" : "Start Quiz"}
+            {exercises.length === 0 ? t("lesson.quiz.noQuiz") : t("lesson.quiz.startQuiz")}
           </button>
         </div>
       </div>
@@ -110,11 +122,15 @@ const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
       <div className="animate-fade-in">
         {/* Progress */}
         <div className="mb-6">
-          <div className="flex justify-between text-sm text-ds-muted mb-2">
+          <div
+            className={`flex justify-between text-sm text-ds-muted mb-2 ${isBengali ? "font-bangla" : ""}`}
+          >
             <span>
-              Question {currentQuestionIndex + 1} of {exercises.length}
+              {t("lesson.quiz.question")} {currentQuestionIndex + 1} {t("lesson.quiz.of")} {exercises.length}
             </span>
-            <span>{userAnswers.filter((a) => a !== null && a !== undefined).length} answered</span>
+            <span>
+              {userAnswers.filter((a) => a !== null && a !== undefined).length} {t("lesson.quiz.answered")}
+            </span>
           </div>
           <div className="h-2 bg-ds-surface rounded-full overflow-hidden">
             <div
@@ -129,8 +145,10 @@ const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
           <span className="text-xs text-ds-border uppercase tracking-wider">
             {exercises[currentQuestionIndex]?.type || "MCQ"}
           </span>
-          <h3 className="text-xl font-bold text-ds-text mt-3 mb-6">
-            {exercises[currentQuestionIndex]?.question?.en || exercises[currentQuestionIndex]?.question}
+          <h3 className={`text-xl font-bold text-ds-text mt-3 mb-6 ${isBengali ? "font-bangla" : ""}`}>
+            {typeof exercises[currentQuestionIndex]?.question === "object"
+              ? getLocalizedContent(exercises[currentQuestionIndex]?.question)
+              : exercises[currentQuestionIndex]?.question}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -169,25 +187,29 @@ const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
           {currentQuestionIndex > 0 && (
             <button
               onClick={prevQuestion}
-              className="px-6 py-4 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold hover:bg-ds-surface transition-all flex items-center gap-2"
+              className={`px-6 py-4 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold hover:bg-ds-surface transition-all flex items-center gap-2 ${
+                isBengali ? "font-bangla" : ""
+              }`}
             >
               <HiOutlineArrowLeft className="w-5 h-5" />
-              Previous
+              {t("common.previous")}
             </button>
           )}
 
           <button
             onClick={nextQuestion}
             disabled={!selectedAnswer}
-            className="flex-1 py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex-1 py-4 rounded-xl bg-ds-text text-ds-bg font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+              isBengali ? "font-bangla" : ""
+            }`}
           >
             {currentQuestionIndex < exercises.length - 1 ? (
               <>
-                Next Question <HiOutlineArrowRight className="w-5 h-5" />
+                {t("lesson.quiz.nextQuestion")} <HiOutlineArrowRight className="w-5 h-5" />
               </>
             ) : (
               <>
-                Submit Quiz <HiOutlineStar className="w-5 h-5" />
+                {t("lesson.quiz.submitQuiz")} <HiOutlineStar className="w-5 h-5" />
               </>
             )}
           </button>
@@ -214,42 +236,53 @@ const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
             )}
           </div>
 
-          <h2 className="text-3xl font-bold text-ds-text mb-2">
-            {finalScorePercent >= 70 ? "Congratulations! 🎉" : "Keep Practicing!"}
+          <h2 className={`text-3xl font-bold text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+            {finalScorePercent >= 70 ? t("lesson.quiz.congratulations") : t("lesson.quiz.keepPracticing")}
           </h2>
 
           <div className="text-5xl font-black text-ds-text my-6">{finalScorePercent}%</div>
 
-          <p className="text-ds-muted mb-2">
-            You got {score} out of {exercises.length} correct
+          <p className={`text-ds-muted mb-2 ${isBengali ? "font-bangla" : ""}`}>
+            {t("lesson.quiz.youGot")} {score} {t("lesson.quiz.outOf")} {exercises.length}{" "}
+            {t("lesson.quiz.correct")}
           </p>
 
           {finalScorePercent >= 70 ? (
-            <p className="text-green-400 mb-8">✓ Lesson completed! Next lesson unlocked.</p>
+            <p className={`text-green-400 mb-8 ${isBengali ? "font-bangla" : ""}`}>
+              {t("lesson.quiz.lessonCompleted")}
+            </p>
           ) : (
-            <p className="text-ds-border mb-8">You need 70% to complete this lesson</p>
+            <p className={`text-ds-border mb-8 ${isBengali ? "font-bangla" : ""}`}>
+              {t("lesson.quiz.needScore")}
+            </p>
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={onReviewLesson}
-              className="px-6 py-3 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold hover:bg-ds-surface transition-all"
+              className={`px-6 py-3 rounded-xl border-2 border-ds-border/30 text-ds-text font-semibold hover:bg-ds-surface transition-all ${
+                isBengali ? "font-bangla" : ""
+              }`}
             >
-              Review Lesson
+              {t("lesson.quiz.reviewLesson")}
             </button>
             <button
               onClick={startQuiz}
-              className="px-6 py-3 rounded-xl bg-ds-text text-ds-bg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+              className={`px-6 py-3 rounded-xl bg-ds-text text-ds-bg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2 ${
+                isBengali ? "font-bangla" : ""
+              }`}
             >
               <HiOutlineRefresh className="w-5 h-5" />
-              Try Again
+              {t("lesson.quiz.tryAgain")}
             </button>
             {finalScorePercent >= 70 && (
               <Link
                 to="/courses"
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold hover:shadow-lg transition-all"
+                className={`px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold hover:shadow-lg transition-all ${
+                  isBengali ? "font-bangla" : ""
+                }`}
               >
-                Next Lesson →
+                {t("lesson.quiz.nextLesson")} →
               </Link>
             )}
           </div>
@@ -257,7 +290,9 @@ const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
 
         {/* Answer Review */}
         <div className="bg-ds-surface/30 rounded-2xl border border-ds-border/30 p-6">
-          <h3 className="text-xl font-bold text-ds-text mb-6">📋 Answer Review</h3>
+          <h3 className={`text-xl font-bold text-ds-text mb-6 ${isBengali ? "font-bangla" : ""}`}>
+            {t("lesson.quiz.answerReview")}
+          </h3>
           <div className="space-y-4">
             {exercises.map((exercise, index) => {
               const userAnswer = userAnswers[index];
@@ -279,17 +314,21 @@ const QuizSection = ({ exercises, onComplete, onReviewLesson }) => {
                       {index + 1}
                     </span>
                     <div className="flex-1">
-                      <p className="text-ds-text font-medium mb-2">
-                        {exercise.question?.en || exercise.question}
+                      <p className={`text-ds-text font-medium mb-2 ${isBengali ? "font-bangla" : ""}`}>
+                        {typeof exercise.question === "object"
+                          ? getLocalizedContent(exercise.question)
+                          : exercise.question}
                       </p>
 
-                      <div className="space-y-1 text-sm">
+                      <div className={`space-y-1 text-sm ${isBengali ? "font-bangla" : ""}`}>
                         <p className={isCorrect ? "text-green-400" : "text-red-400"}>
-                          Your answer: {userAnswer || "Not answered"}
+                          {t("lesson.quiz.yourAnswer")}: {userAnswer || t("lesson.quiz.notAnswered")}
                           {isCorrect && " ✓"}
                         </p>
                         {!isCorrect && (
-                          <p className="text-green-400">Correct answer: {exercise.correctAnswer}</p>
+                          <p className="text-green-400">
+                            {t("lesson.quiz.correctAnswer")}: {exercise.correctAnswer}
+                          </p>
                         )}
                       </div>
                     </div>

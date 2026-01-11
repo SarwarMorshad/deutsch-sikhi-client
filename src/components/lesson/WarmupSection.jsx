@@ -1,6 +1,11 @@
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 import { HiOutlineVolumeUp, HiOutlineStar, HiOutlineCheckCircle, HiOutlineArrowRight } from "react-icons/hi";
 
 const WarmupSection = ({ lesson, speakGerman, onNext }) => {
+  const { t } = useTranslation();
+  const { isBengali, getLocalizedContent } = useLanguage();
+
   // Helper to check if speaker is "other" side
   const isOtherSpeaker = (speaker) => {
     return ["B", "You", "Customer", "Patient", "Tourist", "Student"].includes(speaker);
@@ -9,8 +14,10 @@ const WarmupSection = ({ lesson, speakGerman, onNext }) => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-ds-text mb-2">🎯 Warm-up</h2>
-        <p className="text-ds-muted">Listen and read the dialogue</p>
+        <h2 className={`text-2xl font-bold text-ds-text mb-2 ${isBengali ? "font-bangla" : ""}`}>
+          {t("lesson.warmup.title")}
+        </h2>
+        <p className={`text-ds-muted ${isBengali ? "font-bangla" : ""}`}>{t("lesson.warmup.subtitle")}</p>
       </div>
 
       {/* Dialogue Card */}
@@ -48,8 +55,12 @@ const WarmupSection = ({ lesson, speakGerman, onNext }) => {
                         <HiOutlineVolumeUp className="w-4 h-4 text-ds-muted" />
                       </button>
                     </div>
-                    <p className="text-ds-muted text-sm">{line.translation?.en}</p>
-                    <p className="text-ds-border text-xs font-bangla mt-1">{line.translation?.bn}</p>
+                    <p className={`text-ds-muted text-sm ${isBengali ? "font-bangla" : ""}`}>
+                      {getLocalizedContent(line.translation)}
+                    </p>
+                    <p className={`text-ds-border text-xs mt-1 ${isBengali ? "" : "font-bangla"}`}>
+                      {isBengali ? line.translation?.en : line.translation?.bn}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -61,15 +72,22 @@ const WarmupSection = ({ lesson, speakGerman, onNext }) => {
       {/* Learning Objectives */}
       {lesson.objectives && lesson.objectives.length > 0 && (
         <div className="bg-ds-surface/20 rounded-2xl p-6 border border-ds-border/20">
-          <h3 className="text-lg font-semibold text-ds-text mb-4 flex items-center gap-2">
+          <h3
+            className={`text-lg font-semibold text-ds-text mb-4 flex items-center gap-2 ${
+              isBengali ? "font-bangla" : ""
+            }`}
+          >
             <HiOutlineStar className="w-5 h-5 text-yellow-400" />
-            What you'll learn
+            {t("lesson.warmup.objectives")}
           </h3>
           <ul className="space-y-2">
             {lesson.objectives.map((obj, i) => (
-              <li key={i} className="flex items-center gap-3 text-ds-muted">
+              <li
+                key={i}
+                className={`flex items-center gap-3 text-ds-muted ${isBengali ? "font-bangla" : ""}`}
+              >
                 <HiOutlineCheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                {obj}
+                {typeof obj === "object" ? getLocalizedContent(obj) : obj}
               </li>
             ))}
           </ul>
@@ -78,9 +96,11 @@ const WarmupSection = ({ lesson, speakGerman, onNext }) => {
 
       <button
         onClick={onNext}
-        className="w-full py-4 rounded-xl bg-ds-text text-ds-bg font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+        className={`w-full py-4 rounded-xl bg-ds-text text-ds-bg font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all ${
+          isBengali ? "font-bangla" : ""
+        }`}
       >
-        Continue to Vocabulary
+        {t("lesson.continue.toVocabulary")}
         <HiOutlineArrowRight className="w-5 h-5" />
       </button>
     </div>

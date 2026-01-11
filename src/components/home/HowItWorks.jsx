@@ -4,39 +4,56 @@ import {
   HiOutlineLightningBolt,
   HiOutlineTrendingUp,
 } from "react-icons/hi";
+import { useTranslation } from "react-i18next";
+import useLanguage from "../../hooks/useLanguage";
 
 const HowItWorks = () => {
+  const { t } = useTranslation();
+  const { isBengali } = useLanguage();
+
   const steps = [
     {
       icon: HiOutlineUserAdd,
       number: "01",
-      title: "Create Free Account",
+      title: isBengali ? "বিনামূল্যে অ্যাকাউন্ট" : "Create Free Account",
       titleBn: "বিনামূল্যে অ্যাকাউন্ট",
-      description: "Sign up in 10 seconds. No credit card, no commitment.",
+      titleEn: "Create Free Account",
+      description: isBengali
+        ? "১০ সেকেন্ডে সাইন আপ করুন। কোন ক্রেডিট কার্ড নেই, কোন প্রতিশ্রুতি নেই।"
+        : "Sign up in 10 seconds. No credit card, no commitment.",
       accent: "from-green-400 to-emerald-500",
     },
     {
       icon: HiOutlineAcademicCap,
       number: "02",
-      title: "Pick Your Level",
+      title: isBengali ? "আপনার লেভেল বাছুন" : "Pick Your Level",
       titleBn: "আপনার লেভেল বাছুন",
-      description: "Start from A1 or test your knowledge to find your level.",
+      titleEn: "Pick Your Level",
+      description: isBengali
+        ? "A1 থেকে শুরু করুন অথবা আপনার লেভেল খুঁজে পেতে পরীক্ষা দিন।"
+        : "Start from A1 or test your knowledge to find your level.",
       accent: "from-blue-400 to-indigo-500",
     },
     {
       icon: HiOutlineLightningBolt,
       number: "03",
-      title: "Learn Daily",
+      title: isBengali ? "প্রতিদিন শিখুন" : "Learn Daily",
       titleBn: "প্রতিদিন শিখুন",
-      description: "Bite-sized lessons that fit into your busy schedule.",
+      titleEn: "Learn Daily",
+      description: isBengali
+        ? "আপনার ব্যস্ত সময়সূচীতে মানানসই ছোট ছোট পাঠ।"
+        : "Bite-sized lessons that fit into your busy schedule.",
       accent: "from-orange-400 to-amber-500",
     },
     {
       icon: HiOutlineTrendingUp,
       number: "04",
-      title: "See Progress",
+      title: isBengali ? "অগ্রগতি দেখুন" : "See Progress",
       titleBn: "অগ্রগতি দেখুন",
-      description: "Watch yourself improve with detailed analytics.",
+      titleEn: "See Progress",
+      description: isBengali
+        ? "বিস্তারিত বিশ্লেষণ সহ নিজেকে উন্নতি করতে দেখুন।"
+        : "Watch yourself improve with detailed analytics.",
       accent: "from-purple-400 to-violet-500",
     },
   ];
@@ -54,12 +71,16 @@ const HowItWorks = () => {
         <div className="mb-20">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-px bg-ds-muted"></div>
-            <span className="text-ds-muted text-sm tracking-widest uppercase">The Process</span>
+            <span
+              className={`text-ds-muted text-sm tracking-widest uppercase ${isBengali ? "font-bangla" : ""}`}
+            >
+              {isBengali ? "প্রক্রিয়া" : "The Process"}
+            </span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-ds-text">
-            How It{" "}
+          <h2 className={`text-4xl md:text-5xl font-bold text-ds-text ${isBengali ? "font-bangla" : ""}`}>
+            {isBengali ? "কিভাবে " : "How It "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-ds-muted to-ds-border">
-              Works
+              {isBengali ? "কাজ করে" : "Works"}
             </span>
           </h2>
         </div>
@@ -89,11 +110,21 @@ const HowItWorks = () => {
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-2xl md:text-3xl font-bold text-ds-text mb-2">{step.title}</h3>
-                    <p className="text-ds-muted font-bangla mb-4">{step.titleBn}</p>
+                    <h3
+                      className={`text-2xl md:text-3xl font-bold text-ds-text mb-2 ${
+                        isBengali ? "font-bangla" : ""
+                      }`}
+                    >
+                      {step.title}
+                    </h3>
+                    <p className={`text-ds-muted mb-4 ${isBengali ? "" : "font-bangla"}`}>
+                      {isBengali ? step.titleEn : step.titleBn}
+                    </p>
 
                     {/* Description */}
-                    <p className="text-ds-muted max-w-sm">{step.description}</p>
+                    <p className={`text-ds-muted max-w-sm ${isBengali ? "font-bangla" : ""}`}>
+                      {step.description}
+                    </p>
                   </div>
                 </div>
 
@@ -122,7 +153,9 @@ const HowItWorks = () => {
 
         {/* Bottom CTA */}
         <div className="mt-20 text-center">
-          <p className="text-ds-muted mb-6">Ready to start your German journey?</p>
+          <p className={`text-ds-muted mb-6 ${isBengali ? "font-bangla" : ""}`}>
+            {isBengali ? "আপনার জার্মান যাত্রা শুরু করতে প্রস্তুত?" : "Ready to start your German journey?"}
+          </p>
           <div className="inline-flex items-center gap-4">
             <div className="flex -space-x-2">
               {["🇧🇩", "🇩🇪", "🇬🇧"].map((flag, i) => (
@@ -134,8 +167,14 @@ const HowItWorks = () => {
                 </div>
               ))}
             </div>
-            <span className="text-ds-text">
-              Join learners from <span className="text-ds-muted font-semibold">Bangladesh</span>
+            <span className={`text-ds-text ${isBengali ? "font-bangla" : ""}`}>
+              {isBengali ? (
+                <>বাংলাদেশ থেকে শিক্ষার্থীদের সাথে যোগ দিন</>
+              ) : (
+                <>
+                  Join learners from <span className="text-ds-muted font-semibold">Bangladesh</span>
+                </>
+              )}
             </span>
           </div>
         </div>

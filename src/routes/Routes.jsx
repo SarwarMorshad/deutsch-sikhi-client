@@ -15,6 +15,9 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import VerifyEmail from "../pages/auth/VerifyEmail";
 
+// User Pages
+import Profile from "../pages/user/Profile";
+
 // Admin Pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminLevels from "../pages/admin/AdminLevels";
@@ -41,11 +44,7 @@ const router = createBrowserRouter([
       },
       {
         path: "lessons/:id",
-        element: (
-          <PrivateRoute>
-            <LessonDetail />
-          </PrivateRoute>
-        ),
+        element: <LessonDetail />,
       },
       {
         path: "vocabulary",
@@ -75,7 +74,7 @@ const router = createBrowserRouter([
         path: "profile",
         element: (
           <PrivateRoute>
-            <div className="p-8 text-ds-text">Profile Page - Coming Soon</div>
+            <Profile />
           </PrivateRoute>
         ),
       },

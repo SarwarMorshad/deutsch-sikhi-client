@@ -18,6 +18,7 @@ import {
   HiOutlineLogout,
 } from "react-icons/hi";
 import toast from "react-hot-toast";
+import ChangePassword from "../../components/profile/ChangePassword";
 
 const Profile = () => {
   const { t } = useTranslation();
@@ -378,7 +379,9 @@ const Profile = () => {
             </button>
           </div>
         </div>
-
+        <div className="mb-6">
+          <ChangePassword />
+        </div>
         {/* Danger Zone */}
         <div className="bg-red-500/5 rounded-2xl border border-red-500/20 p-6">
           <h3

@@ -25,7 +25,9 @@
     "home": "Home",
     "courses": "Courses",
     "vocabulary": "Vocabulary",
+    "grammar": "Grammar",
     "practice": "Practice",
+    "leaderboard": "Leaderboard",
     "profile": "Profile",
     "login": "Login",
     "register": "Register",
@@ -115,7 +117,14 @@
     "completed": "Completed",
     "locked": "Locked",
     "comingSoon": "Coming Soon",
-    "noLessons": "No lessons available for this level yet"
+    "noLessons": "No lessons available for this level yet",
+    "progress": {
+      "title": "Your Progress",
+      "totalLessons": "Total Lessons",
+      "overallProgress": "Overall Progress",
+      "averageScore": "Average Score",
+      "completePrevious": "Complete previous lesson to unlock"
+    }
   },
 
   "lesson": {
@@ -223,6 +232,33 @@
       "bengali": "বাংলা",
       "changed": "Language changed to"
     },
+    "changePassword": {
+      "title": "Change Password",
+      "subtitle": "Keep your account secure",
+      "change": "Change",
+      "currentPassword": "Current Password",
+      "currentPasswordPlaceholder": "Enter current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Enter new password",
+      "confirmPassword": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Confirm new password",
+      "passwordsMatch": "Passwords match",
+      "passwordsDontMatch": "Passwords don't match",
+      "changeBtn": "Change Password",
+      "changing": "Changing...",
+      "googleUser": "You signed in with Google. Use Google account settings to change your password.",
+      "success": "Password changed successfully!",
+      "errors": {
+        "enterCurrent": "Enter current password",
+        "requirements": "New password doesn't meet all requirements",
+        "mismatch": "Passwords don't match",
+        "samePasword": "New password must be different from current password",
+        "wrongPassword": "Current password is incorrect",
+        "tooManyRequests": "Too many attempts. Try again later",
+        "recentLogin": "Please log out and log in again, then try",
+        "failed": "Failed to change password. Please try again"
+      }
+    },
     "danger": {
       "title": "Danger Zone",
       "signOut": "Sign Out",
@@ -294,6 +330,22 @@
         "registrationFailed": "Registration failed. Please try again."
       }
     },
+    "forgotPassword": {
+      "title": "Forgot Password?",
+      "subtitle": "No worries! Enter your email and we'll send you a reset link",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email",
+      "submitBtn": "Send Reset Link",
+      "sending": "Sending...",
+      "backToLogin": "Back to Login",
+      "noAccount": "Don't have an account?",
+      "register": "Register",
+      "successTitle": "Email Sent!",
+      "successMessage": "We've sent a password reset link to",
+      "checkInbox": "Please check your inbox.",
+      "spamNotice": "If you don't see the email, check your spam folder",
+      "tryAnother": "Try another email"
+    },
     "verifyEmail": {
       "title": "Verify Your Email",
       "sentTo": "We've sent a verification link to",
@@ -314,11 +366,14 @@
       "clickToResend": "click here to resend"
     },
     "errors": {
-      "noAccount": "No account found with this email",
+      "userNotFound": "No account found with this email",
       "wrongPassword": "Incorrect password",
       "invalidCredentials": "Invalid email or password",
+      "invalidEmail": "Invalid email address",
+      "tooManyRequests": "Too many attempts. Try again later",
       "loginFailed": "Login failed. Please try again.",
-      "googleFailed": "Google sign-in failed"
+      "googleFailed": "Google sign-in failed",
+      "genericError": "Something went wrong. Please try again"
     }
   },
 
@@ -334,6 +389,8 @@
     "nameUpdated": "Name updated successfully",
     "languageChanged": "Language changed successfully",
     "progressSaved": "Progress saved!",
+    "lessonCompleted": "Lesson completed! Progress saved.",
+    "tryAgainForBetter": "Progress saved. Try again for a better score!",
     "errorOccurred": "An error occurred",
     "pleaseLogin": "Please login to continue"
   },
@@ -422,5 +479,58 @@
     "exploreWords": "Explore all words",
     "reviewLastLesson": "Review Last Lesson",
     "goBackToLast": "Go back to your last lesson"
+  },
+
+  "leaderboard": {
+    "title": "Leaderboard",
+    "topLearners": "Top Learners",
+    "subtitle": "See who's learning the most. Complete lessons to climb the ranks!",
+    "yourPosition": "Your Position",
+    "notRanked": "Not ranked yet",
+    "lessons": "Lessons",
+    "avgScore": "Avg Score",
+    "top": "Top",
+    "learner": "Learner",
+    "score": "Score",
+    "activity": "Activity",
+    "you": "You",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "d ago",
+    "weeksAgo": "w ago",
+    "monthsAgo": "mo ago",
+    "wantToSeeRank": "Want to see your rank?",
+    "loginToJoin": "Log in and complete lessons to join the leaderboard!",
+    "noLearnersYet": "No learners yet!",
+    "beFirst": "Be the first to complete a lesson and top the leaderboard",
+    "startLearning": "Start Learning",
+    "climbHigher": "Want to climb higher? Complete more lessons and score well!",
+    "browseCourses": "Browse Courses",
+    "loading": "Loading leaderboard...",
+    "error": "Failed to load leaderboard",
+    "tryAgain": "Try Again",
+    "startNow": "Start Now",
+    "logIn": "Log In"
+  },
+
+  "grammar": {
+    "title": "Grammar",
+    "pageTitle": "German Grammar",
+    "subtitle": "Learn German grammar rules with conjugation tables, examples, and explanations",
+    "search": "Search grammar topics...",
+    "all": "All",
+    "topics": "topics",
+    "blocks": "blocks",
+    "noTopics": "No grammar topics found",
+    "adjustSearch": "Try adjusting your search",
+    "comingSoon": "Grammar topics will be added soon",
+    "notFound": "Grammar Not Found",
+    "notFoundDesc": "This grammar topic doesn't exist",
+    "backToGrammar": "Back to Grammar",
+    "relatedLessons": "Related Lessons",
+    "module": "Module",
+    "viewAll": "View all grammar topics",
+    "loading": "Loading...",
+    "noContent": "No content available for this topic"
   }
 }

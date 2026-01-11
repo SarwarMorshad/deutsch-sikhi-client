@@ -12,6 +12,7 @@ import {
   HiOutlineBookOpen,
   HiOutlineTranslate,
   HiOutlineLightningBolt,
+  HiOutlineUserGroup,
   HiOutlineLogin,
   HiOutlineUserAdd,
   HiOutlineLogout,
@@ -85,6 +86,7 @@ const Navbar = () => {
     { to: "/courses", label: t("nav.courses"), icon: HiOutlineBookOpen },
     { to: "/vocabulary", label: t("nav.vocabulary"), icon: HiOutlineTranslate },
     { to: "/practice", label: t("nav.practice"), icon: HiOutlineLightningBolt },
+    { to: "/leaderboard", label: t("nav.leaderboard"), icon: HiOutlineUserGroup },
   ];
 
   // Different dropdown links based on role

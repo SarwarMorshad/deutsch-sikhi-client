@@ -26,9 +26,15 @@ import AdminVocabulary from "../pages/admin/AdminVocabulary";
 import AdminExercises from "../pages/admin/AdminExercises";
 import AdminUsers from "../pages/admin/AdminUsers";
 import AdminSettings from "../pages/admin/AdminSettings";
+import AdminGrammarList from "../pages/admin/grammar/AdminGrammarList";
+import AdminGrammarEdit from "../pages/admin/grammar/AdminGrammarEdit";
 import Vocabulary from "../pages/public/Vocabulary";
 import Practice from "../pages/public/Practice";
 import Dashboard from "../pages/user/Dashboard";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import Leaderboard from "../pages/public/Leaderboard";
+import Grammar from "../pages/public/Grammar";
+import GrammarDetail from "../pages/public/GrammarDetail";
 
 const router = createBrowserRouter([
   // Main Site Routes
@@ -58,6 +64,14 @@ const router = createBrowserRouter([
         element: <Practice />,
       },
       {
+        path: "grammar",
+        element: <Grammar />,
+      },
+      {
+        path: "grammar/:slug",
+        element: <GrammarDetail />,
+      },
+      {
         path: "dashboard",
         element: (
           <PrivateRoute>
@@ -81,6 +95,10 @@ const router = createBrowserRouter([
           </PrivateRoute>
         ),
       },
+      {
+        path: "leaderboard",
+        element: <Leaderboard />,
+      },
     ],
   },
 
@@ -96,6 +114,10 @@ const router = createBrowserRouter([
   {
     path: "/verify-email",
     element: <VerifyEmail />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
   },
 
   // Admin Routes
@@ -122,6 +144,14 @@ const router = createBrowserRouter([
       {
         path: "vocabulary",
         element: <AdminVocabulary />,
+      },
+      {
+        path: "grammar",
+        element: <AdminGrammarList />,
+      },
+      {
+        path: "grammar/:id",
+        element: <AdminGrammarEdit />,
       },
       {
         path: "exercises",

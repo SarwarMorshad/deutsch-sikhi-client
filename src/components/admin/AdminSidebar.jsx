@@ -11,6 +11,7 @@ import {
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
   HiOutlineHome,
+  HiOutlineAcademicCap,
 } from "react-icons/hi";
 
 const AdminSidebar = ({ collapsed, setCollapsed, user, onLogout }) => {
@@ -19,13 +20,14 @@ const AdminSidebar = ({ collapsed, setCollapsed, user, onLogout }) => {
     { to: "/admin/levels", label: "Levels", icon: HiOutlineCollection },
     { to: "/admin/lessons", label: "Lessons", icon: HiOutlineBookOpen },
     { to: "/admin/vocabulary", label: "Vocabulary", icon: HiOutlineTranslate },
+    { to: "/admin/grammar", label: "Grammar", icon: HiOutlineAcademicCap },
     { to: "/admin/exercises", label: "Exercises", icon: HiOutlinePuzzle },
     { to: "/admin/users", label: "Users", icon: HiOutlineUsers },
     { to: "/admin/settings", label: "Settings", icon: HiOutlineCog },
   ];
 
   const navLinkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
       isActive
         ? "bg-ds-text text-ds-bg font-semibold"
         : "text-ds-muted hover:text-ds-text hover:bg-ds-surface/50"
@@ -42,12 +44,12 @@ const AdminSidebar = ({ collapsed, setCollapsed, user, onLogout }) => {
         <div className="flex items-center justify-between">
           {!collapsed && (
             <span className="text-xl font-bold text-ds-text">
-              <span className="text-ds-muted">DE</span> Admin Panel
+              <span className="text-ds-muted">DE</span> Admin
             </span>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-2 rounded-lg hover:bg-ds-bg text-ds-muted hover:text-ds-text transition-colors"
+            className="p-2 rounded-lg hover:bg-ds-bg text-ds-muted hover:text-ds-text transition-colors cursor-pointer"
           >
             {collapsed ? (
               <HiOutlineChevronRight className="w-5 h-5" />
@@ -58,22 +60,22 @@ const AdminSidebar = ({ collapsed, setCollapsed, user, onLogout }) => {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {/* Home Link - Back to Main Site */}
+      {/* Back to Site Link */}
+      <div className="px-4 pt-4">
         <Link
           to="/"
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-ds-muted hover:text-ds-text hover:bg-ds-surface/50 transition-all duration-200 ${
+          className={`flex items-center gap-3 px-4 py-2 rounded-xl text-ds-muted hover:text-ds-text hover:bg-ds-surface/50 transition-colors cursor-pointer ${
             collapsed ? "justify-center" : ""
           }`}
-          title={collapsed ? "Back to Home" : undefined}
+          title={collapsed ? "Back to Site" : undefined}
         >
           <HiOutlineHome className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span>Back to Home</span>}
+          {!collapsed && <span className="text-sm">Back to Site</span>}
         </Link>
+      </div>
 
-        <div className="border-t border-ds-border/30 my-2"></div>
-
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -114,7 +116,7 @@ const AdminSidebar = ({ collapsed, setCollapsed, user, onLogout }) => {
 
         <button
           onClick={onLogout}
-          className={`flex items-center gap-3 w-full px-4 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors ${
+          className={`flex items-center gap-3 w-full px-4 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer ${
             collapsed ? "justify-center" : ""
           }`}
           title={collapsed ? "Logout" : undefined}

@@ -65,7 +65,7 @@ const Hero = () => {
                       <h1 className="text-5xl md:text-7xl font-black text-ds-text leading-none font-bangla">
                         জার্মান
                       </h1>
-                      <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-ds-muted to-ds-border leading-none font-bangla">
+                      <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-ds-muted to-ds-border leading-none font-bangla pt-4">
                         শিখুন
                       </h1>
                       <h1 className="text-3xl md:text-4xl font-bold text-ds-text leading-tight">

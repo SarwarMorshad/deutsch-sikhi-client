@@ -14,9 +14,18 @@ import Page404 from "../pages/Page404";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import VerifyEmail from "../pages/auth/VerifyEmail";
+import ForgotPassword from "../pages/auth/ForgotPassword";
 
 // User Pages
 import Profile from "../pages/user/Profile";
+import Dashboard from "../pages/user/Dashboard";
+
+// Public Pages (some require auth)
+import Vocabulary from "../pages/public/Vocabulary";
+import Practice from "../pages/public/Practice";
+import Leaderboard from "../pages/public/Leaderboard";
+import Grammar from "../pages/public/Grammar";
+import GrammarDetail from "../pages/public/GrammarDetail";
 
 // Admin Pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
@@ -28,13 +37,6 @@ import AdminUsers from "../pages/admin/AdminUsers";
 import AdminSettings from "../pages/admin/AdminSettings";
 import AdminGrammarList from "../pages/admin/grammar/AdminGrammarList";
 import AdminGrammarEdit from "../pages/admin/grammar/AdminGrammarEdit";
-import Vocabulary from "../pages/public/Vocabulary";
-import Practice from "../pages/public/Practice";
-import Dashboard from "../pages/user/Dashboard";
-import ForgotPassword from "../pages/auth/ForgotPassword";
-import Leaderboard from "../pages/public/Leaderboard";
-import Grammar from "../pages/public/Grammar";
-import GrammarDetail from "../pages/public/GrammarDetail";
 
 const router = createBrowserRouter([
   // Main Site Routes
@@ -43,6 +45,7 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     errorElement: <Page404 />,
     children: [
+      // ===== PUBLIC ROUTES (No Auth Required) =====
       {
         index: true,
         element: <Home />,
@@ -52,24 +55,50 @@ const router = createBrowserRouter([
         element: <Courses />,
       },
       {
+        path: "leaderboard",
+        element: <Leaderboard />,
+      },
+
+      // ===== PROTECTED ROUTES (Auth Required) =====
+      {
         path: "lessons/:id",
-        element: <LessonDetail />,
+        element: (
+          <PrivateRoute>
+            <LessonDetail />
+          </PrivateRoute>
+        ),
       },
       {
         path: "vocabulary",
-        element: <Vocabulary />,
+        element: (
+          <PrivateRoute>
+            <Vocabulary />
+          </PrivateRoute>
+        ),
       },
       {
         path: "practice",
-        element: <Practice />,
+        element: (
+          <PrivateRoute>
+            <Practice />
+          </PrivateRoute>
+        ),
       },
       {
         path: "grammar",
-        element: <Grammar />,
+        element: (
+          <PrivateRoute>
+            <Grammar />
+          </PrivateRoute>
+        ),
       },
       {
         path: "grammar/:slug",
-        element: <GrammarDetail />,
+        element: (
+          <PrivateRoute>
+            <GrammarDetail />
+          </PrivateRoute>
+        ),
       },
       {
         path: "dashboard",
@@ -94,10 +123,6 @@ const router = createBrowserRouter([
             <Profile />
           </PrivateRoute>
         ),
-      },
-      {
-        path: "leaderboard",
-        element: <Leaderboard />,
       },
     ],
   },

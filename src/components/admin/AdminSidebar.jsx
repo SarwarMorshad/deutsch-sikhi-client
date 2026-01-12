@@ -70,7 +70,7 @@ const AdminSidebar = ({ collapsed, setCollapsed, user, onLogout }) => {
           title={collapsed ? "Back to Site" : undefined}
         >
           <HiOutlineHome className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span className="text-sm">Back to Site</span>}
+          {!collapsed && <span className="text-sm">Back to Home</span>}
         </Link>
       </div>
 

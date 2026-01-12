@@ -6,160 +6,33 @@ import {
   HiOutlineArrowLeft,
   HiOutlineSave,
   HiOutlinePlus,
-  HiOutlineTrash,
-  HiOutlineChevronUp,
-  HiOutlineChevronDown,
   HiOutlineDocumentText,
   HiOutlineLink,
   HiOutlineX,
-  HiOutlineMenuAlt2,
+  HiOutlineEye,
 } from "react-icons/hi";
 
-// Block type icons and labels
-const BLOCK_TYPES = {
-  text: {
-    icon: HiOutlineDocumentText,
-    label: "Text/Paragraph",
-    description: "Rich text explanations",
-  },
-  // Future block types will be added here
-  // table: { icon: HiOutlineTable, label: "Table", description: "Conjugation tables" },
-  // image: { icon: HiOutlinePhotograph, label: "Image", description: "Visual explanations" },
-  // examples: { icon: HiOutlineChat, label: "Examples", description: "Example sentences" },
-  // tip: { icon: HiOutlineLightBulb, label: "Tip/Note", description: "Highlighted tips" },
-  // comparison: { icon: HiOutlineSwitchHorizontal, label: "Comparison", description: "Side-by-side" },
-  // video: { icon: HiOutlinePlay, label: "Video", description: "YouTube embed" },
-  // quiz: { icon: HiOutlineQuestionMarkCircle, label: "Quiz", description: "Mini quiz" },
-};
+// Import block components from components folder
+import { generateBlockId } from "../../../components/admin/grammar/BlockTypes";
+import BlockWrapper from "../../../components/admin/grammar/BlockWrapper";
+import AddBlockModal from "../../../components/admin/grammar/AddBlockModal";
+import LinkLessonsModal from "../../../components/admin/grammar/LinkLessonsModal";
+import GrammarPreviewModal from "../../../components/admin/grammar/GrammarPreviewModal";
 
-// Text Block Editor Component
-const TextBlockEditor = ({ data, onChange }) => {
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-ds-text text-sm font-medium mb-2">Content (English)</label>
-        <textarea
-          value={data.content_en || ""}
-          onChange={(e) => onChange({ ...data, content_en: e.target.value })}
-          placeholder="Enter explanation in English..."
-          rows={4}
-          className="w-full px-4 py-3 rounded-xl bg-ds-bg/50 border border-ds-border/30 text-ds-text placeholder-ds-muted focus:outline-none focus:border-ds-border resize-none"
-        />
-      </div>
-      <div>
-        <label className="block text-ds-text text-sm font-medium mb-2">
-          Content (Bengali) <span className="text-ds-muted font-normal">- optional</span>
-        </label>
-        <textarea
-          value={data.content_bn || ""}
-          onChange={(e) => onChange({ ...data, content_bn: e.target.value })}
-          placeholder="বাংলায় ব্যাখ্যা লিখুন..."
-          rows={4}
-          className="w-full px-4 py-3 rounded-xl bg-ds-bg/50 border border-ds-border/30 text-ds-text placeholder-ds-muted focus:outline-none focus:border-ds-border resize-none font-bangla"
-        />
-      </div>
-    </div>
-  );
-};
-
-// Block Wrapper Component
-const BlockWrapper = ({ block, index, totalBlocks, onUpdate, onDelete, onMoveUp, onMoveDown }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const BlockType = BLOCK_TYPES[block.type];
-  const BlockIcon = BlockType?.icon || HiOutlineDocumentText;
-
-  const renderBlockEditor = () => {
-    switch (block.type) {
-      case "text":
-        return (
-          <TextBlockEditor data={block.data} onChange={(newData) => onUpdate({ ...block, data: newData })} />
-        );
-      // Future block editors will be added here
-      default:
-        return (
-          <div className="text-ds-muted text-center py-8">
-            Block type "{block.type}" editor coming soon...
-          </div>
-        );
-    }
-  };
-
-  return (
-    <div className="bg-ds-surface/30 rounded-2xl border border-ds-border/30 overflow-hidden">
-      {/* Block Header */}
-      <div
-        className="flex items-center justify-between px-4 py-3 bg-ds-surface/50 border-b border-ds-border/30 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 text-ds-muted">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveUp();
-              }}
-              disabled={index === 0}
-              className="p-1 hover:bg-ds-border/30 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-            >
-              <HiOutlineChevronUp className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveDown();
-              }}
-              disabled={index === totalBlocks - 1}
-              className="p-1 hover:bg-ds-border/30 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-            >
-              <HiOutlineChevronDown className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="w-8 h-8 rounded-lg bg-ds-border/20 flex items-center justify-center">
-            <BlockIcon className="w-4 h-4 text-ds-muted" />
-          </div>
-
-          <div>
-            <span className="font-medium text-ds-text">{BlockType?.label || block.type}</span>
-            <span className="text-ds-muted text-sm ml-2">#{index + 1}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="p-2 hover:bg-red-500/20 rounded-lg text-ds-muted hover:text-red-400 transition-colors cursor-pointer"
-          >
-            <HiOutlineTrash className="w-4 h-4" />
-          </button>
-          <HiOutlineMenuAlt2
-            className={`w-5 h-5 text-ds-muted transition-transform ${isExpanded ? "rotate-180" : ""}`}
-          />
-        </div>
-      </div>
-
-      {/* Block Content */}
-      {isExpanded && <div className="p-4">{renderBlockEditor()}</div>}
-    </div>
-  );
-};
-
-// Main Component
 const AdminGrammarEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
   const isNew = id === "new";
 
+  // State
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [levels, setLevels] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [showLinkLessons, setShowLinkLessons] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [formData, setFormData] = useState({
     title: { de: "", en: "", bn: "" },
@@ -171,10 +44,11 @@ const AdminGrammarEdit = () => {
     order: 0,
   });
 
+  // Fetch data on mount
   useEffect(() => {
     fetchLevels();
     fetchLessons();
-    if (!isNew) {
+    if (!isNew && id && id !== "undefined") {
       fetchGrammar();
     }
   }, [id]);
@@ -198,6 +72,10 @@ const AdminGrammarEdit = () => {
   };
 
   const fetchGrammar = async () => {
+    if (!id || id === "undefined" || id === "new") {
+      setLoading(false);
+      return;
+    }
     try {
       const response = await axiosSecure.get(`/grammar/${id}`);
       const data = response.data.data;
@@ -219,8 +97,8 @@ const AdminGrammarEdit = () => {
     }
   };
 
+  // Save handler
   const handleSave = async () => {
-    // Validation
     if (!formData.title.de || !formData.title.en) {
       toast.error("German and English titles are required");
       return;
@@ -248,19 +126,13 @@ const AdminGrammarEdit = () => {
     }
   };
 
-  // Block management functions
-  const addBlock = (type) => {
-    const newBlock = {
-      id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      order: formData.blocks.length + 1,
-      data: {},
-    };
+  // Block management
+  const addBlock = (newBlock) => {
+    newBlock.order = formData.blocks.length + 1;
     setFormData({
       ...formData,
       blocks: [...formData.blocks, newBlock],
     });
-    setShowAddBlock(false);
   };
 
   const updateBlock = (index, updatedBlock) => {
@@ -283,6 +155,7 @@ const AdminGrammarEdit = () => {
     setFormData({ ...formData, blocks: newBlocks });
   };
 
+  // Lesson linking
   const toggleLesson = (lessonId) => {
     const current = formData.linkedLessons;
     if (current.includes(lessonId)) {
@@ -296,6 +169,27 @@ const AdminGrammarEdit = () => {
         linkedLessons: [...current, lessonId],
       });
     }
+  };
+
+  // Helper to get level title
+  const getLevelTitle = (level) => {
+    if (typeof level.title === "object") {
+      return level.title.en || level.title.de || "";
+    }
+    return level.title || "";
+  };
+
+  // Helper to get lesson title
+  const getLessonTitle = (lesson) => {
+    if (typeof lesson.title === "object") {
+      return lesson.title.en || lesson.title.de || "Untitled";
+    }
+    return lesson.title || "Untitled";
+  };
+
+  // Get current level for preview
+  const getCurrentLevel = () => {
+    return levels.find((l) => l._id === formData.levelId) || null;
   };
 
   if (loading) {
@@ -326,7 +220,15 @@ const AdminGrammarEdit = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Status Toggle */}
+          {/* Preview Button */}
+          <button
+            onClick={() => setShowPreview(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-ds-surface border border-ds-border/30 text-ds-text rounded-xl hover:bg-ds-border/30 transition-all cursor-pointer"
+          >
+            <HiOutlineEye className="w-5 h-5" />
+            Preview
+          </button>
+
           <select
             value={formData.status}
             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -336,7 +238,6 @@ const AdminGrammarEdit = () => {
             <option value="published">Published</option>
           </select>
 
-          {/* Save Button */}
           <button
             onClick={handleSave}
             disabled={saving}
@@ -349,13 +250,12 @@ const AdminGrammarEdit = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content - Left 2 columns */}
+        {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
           <div className="bg-ds-surface/30 rounded-2xl border border-ds-border/30 p-6 space-y-4">
             <h2 className="text-lg font-semibold text-ds-text">Basic Information</h2>
 
-            {/* German Title */}
             <div>
               <label className="block text-ds-text text-sm font-medium mb-2">
                 Title (German) <span className="text-red-400">*</span>
@@ -374,7 +274,6 @@ const AdminGrammarEdit = () => {
               />
             </div>
 
-            {/* English Title */}
             <div>
               <label className="block text-ds-text text-sm font-medium mb-2">
                 Title (English) <span className="text-red-400">*</span>
@@ -393,7 +292,6 @@ const AdminGrammarEdit = () => {
               />
             </div>
 
-            {/* Bengali Title */}
             <div>
               <label className="block text-ds-text text-sm font-medium mb-2">
                 Title (Bengali) <span className="text-ds-muted font-normal">- optional</span>
@@ -412,7 +310,6 @@ const AdminGrammarEdit = () => {
               />
             </div>
 
-            {/* Description EN */}
             <div>
               <label className="block text-ds-text text-sm font-medium mb-2">
                 Short Description (English)
@@ -431,7 +328,6 @@ const AdminGrammarEdit = () => {
               />
             </div>
 
-            {/* Description BN */}
             <div>
               <label className="block text-ds-text text-sm font-medium mb-2">
                 Short Description (Bengali)
@@ -491,7 +387,6 @@ const AdminGrammarEdit = () => {
                   />
                 ))}
 
-                {/* Add more block button */}
                 <button
                   onClick={() => setShowAddBlock(true)}
                   className="w-full py-3 border-2 border-dashed border-ds-border/30 rounded-xl text-ds-muted hover:border-ds-border hover:text-ds-text transition-colors cursor-pointer flex items-center justify-center gap-2"
@@ -504,13 +399,12 @@ const AdminGrammarEdit = () => {
           </div>
         </div>
 
-        {/* Sidebar - Right column */}
+        {/* Sidebar */}
         <div className="space-y-6">
           {/* Level & Order */}
           <div className="bg-ds-surface/30 rounded-2xl border border-ds-border/30 p-6 space-y-4">
             <h2 className="text-lg font-semibold text-ds-text">Settings</h2>
 
-            {/* Level */}
             <div>
               <label className="block text-ds-text text-sm font-medium mb-2">
                 Level <span className="text-red-400">*</span>
@@ -523,14 +417,12 @@ const AdminGrammarEdit = () => {
                 <option value="">Select Level</option>
                 {levels.map((level) => (
                   <option key={level._id} value={level._id}>
-                    {level.code} -{" "}
-                    {typeof level.title === "object" ? level.title.en || level.title.de : level.title}
+                    {level.code} - {getLevelTitle(level)}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Order */}
             <div>
               <label className="block text-ds-text text-sm font-medium mb-2">Display Order</label>
               <input
@@ -566,9 +458,7 @@ const AdminGrammarEdit = () => {
                       key={lessonId}
                       className="flex items-center justify-between px-3 py-2 bg-ds-bg/50 rounded-lg"
                     >
-                      <span className="text-ds-text text-sm truncate">
-                        {typeof lesson.title === "object" ? lesson.title.en || lesson.title.de : lesson.title}
-                      </span>
+                      <span className="text-ds-text text-sm truncate">{getLessonTitle(lesson)}</span>
                       <button
                         onClick={() => toggleLesson(lessonId)}
                         className="p-1 hover:bg-red-500/20 rounded text-ds-muted hover:text-red-400 cursor-pointer"
@@ -581,131 +471,55 @@ const AdminGrammarEdit = () => {
               </div>
             )}
           </div>
+
+          {/* Quick Preview Card */}
+          <div className="bg-ds-surface/30 rounded-2xl border border-ds-border/30 p-6">
+            <h2 className="text-lg font-semibold text-ds-text mb-4">Quick Preview</h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-ds-muted">Status</span>
+                <span className={formData.status === "published" ? "text-emerald-400" : "text-yellow-400"}>
+                  {formData.status === "published" ? "Published" : "Draft"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-ds-muted">Blocks</span>
+                <span className="text-ds-text">{formData.blocks.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-ds-muted">Linked Lessons</span>
+                <span className="text-ds-text">{formData.linkedLessons.length}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPreview(true)}
+              className="w-full mt-4 py-2 border border-ds-border/30 rounded-xl text-ds-muted hover:text-ds-text hover:bg-ds-border/20 transition-colors cursor-pointer flex items-center justify-center gap-2"
+            >
+              <HiOutlineEye className="w-4 h-4" />
+              Open Full Preview
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Add Block Modal */}
-      {showAddBlock && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowAddBlock(false)}
-          ></div>
-          <div className="relative w-full max-w-md bg-ds-surface rounded-2xl border border-ds-border/30 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-ds-text">Add Block</h3>
-              <button
-                onClick={() => setShowAddBlock(false)}
-                className="p-2 hover:bg-ds-border/30 rounded-lg text-ds-muted hover:text-ds-text cursor-pointer"
-              >
-                <HiOutlineX className="w-5 h-5" />
-              </button>
-            </div>
+      {/* Modals */}
+      {showAddBlock && <AddBlockModal onClose={() => setShowAddBlock(false)} onAddBlock={addBlock} />}
 
-            <div className="space-y-2">
-              {Object.entries(BLOCK_TYPES).map(([type, config]) => {
-                const Icon = config.icon;
-                return (
-                  <button
-                    key={type}
-                    onClick={() => addBlock(type)}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-ds-bg/50 border border-ds-border/30 hover:border-ds-border transition-colors cursor-pointer text-left"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-ds-border/20 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-5 h-5 text-ds-muted" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-ds-text">{config.label}</div>
-                      <div className="text-sm text-ds-muted">{config.description}</div>
-                    </div>
-                  </button>
-                );
-              })}
-
-              {/* Coming Soon */}
-              <div className="pt-4 border-t border-ds-border/30">
-                <p className="text-xs text-ds-muted text-center">
-                  More block types coming soon: Tables, Images, Examples, Tips, Comparisons, Videos, Quizzes
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+      {showLinkLessons && (
+        <LinkLessonsModal
+          lessons={lessons}
+          linkedLessons={formData.linkedLessons}
+          onToggle={toggleLesson}
+          onClose={() => setShowLinkLessons(false)}
+        />
       )}
 
-      {/* Link Lessons Modal */}
-      {showLinkLessons && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowLinkLessons(false)}
-          ></div>
-          <div className="relative w-full max-w-lg bg-ds-surface rounded-2xl border border-ds-border/30 p-6 max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-ds-text">Link Lessons</h3>
-              <button
-                onClick={() => setShowLinkLessons(false)}
-                className="p-2 hover:bg-ds-border/30 rounded-lg text-ds-muted hover:text-ds-text cursor-pointer"
-              >
-                <HiOutlineX className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="overflow-y-auto flex-1 space-y-2">
-              {lessons.length === 0 ? (
-                <p className="text-ds-muted text-center py-8">No lessons available</p>
-              ) : (
-                lessons.map((lesson) => {
-                  const isLinked = formData.linkedLessons.includes(lesson._id);
-                  const lessonTitle =
-                    typeof lesson.title === "object" ? lesson.title.en || lesson.title.de : lesson.title;
-                  return (
-                    <button
-                      key={lesson._id}
-                      onClick={() => toggleLesson(lesson._id)}
-                      className={`w-full flex items-center justify-between p-4 rounded-xl border transition-colors cursor-pointer text-left ${
-                        isLinked
-                          ? "bg-emerald-500/10 border-emerald-500/30"
-                          : "border-ds-border/30 hover:bg-ds-bg/50"
-                      }`}
-                    >
-                      <div>
-                        <div className="font-medium text-ds-text">{lessonTitle}</div>
-                        <div className="text-sm text-ds-muted">
-                          {lesson.level?.code || "N/A"} • Module {lesson.order || 0}
-                        </div>
-                      </div>
-                      <div
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          isLinked ? "bg-emerald-500 border-emerald-500" : "border-ds-border"
-                        }`}
-                      >
-                        {isLinked && (
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-
-            <div className="pt-4 border-t border-ds-border/30 mt-4">
-              <button
-                onClick={() => setShowLinkLessons(false)}
-                className="w-full py-3 bg-ds-text text-ds-bg rounded-xl font-semibold hover:shadow-lg transition-all cursor-pointer"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
+      {showPreview && (
+        <GrammarPreviewModal
+          formData={formData}
+          level={getCurrentLevel()}
+          onClose={() => setShowPreview(false)}
+        />
       )}
     </div>
   );

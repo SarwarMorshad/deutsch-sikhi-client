@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import { HiOutlineSearch, HiOutlineShieldCheck, HiOutlineBan, HiOutlineRefresh } from "react-icons/hi";
+import { FaCrown } from "react-icons/fa";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 
 const AdminUsers = () => {
   const axiosSecure = useAxiosSecure();
@@ -34,26 +36,72 @@ const AdminUsers = () => {
   const getUserName = (user) => user.name || user.displayName || "No Name";
 
   const toggleRole = async (user) => {
+    // Check if Master Admin (extra frontend protection)
+    if (user.isMasterAdmin) {
+      toast.error("Cannot modify Master Admin");
+      return;
+    }
+
     const newRole = user.role === "admin" ? "user" : "admin";
-    if (!confirm(`Make ${getUserName(user)} ${newRole}?`)) return;
-    try {
-      await axiosSecure.patch(`/admin/users/${user._id}/role`, { role: newRole });
-      toast.success(`Role updated to ${newRole}`);
-      fetchUsers();
-    } catch (error) {
-      toast.error("Failed to update role");
+    const userName = getUserName(user);
+
+    const result = await Swal.fire({
+      title: "Change User Role?",
+      html: `Are you sure you want to make <strong>${userName}</strong> ${
+        newRole === "admin" ? "an" : "a"
+      } <strong>${newRole}</strong>?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#124559",
+      cancelButtonColor: "#598392",
+      confirmButtonText: `Yes, make ${newRole}`,
+      cancelButtonText: "Cancel",
+      background: "#01161e",
+      color: "#eff6e0",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axiosSecure.patch(`/admin/users/${user._id}/role`, { role: newRole });
+        toast.success(`${userName} is now ${newRole === "admin" ? "an" : "a"} ${newRole}`);
+        fetchUsers();
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to update role");
+      }
     }
   };
 
   const toggleBlock = async (user) => {
+    // Check if Master Admin (extra frontend protection)
+    if (user.isMasterAdmin) {
+      toast.error("Cannot block Master Admin");
+      return;
+    }
+
     const action = user.blocked ? "unblock" : "block";
-    if (!confirm(`${action} ${getUserName(user)}?`)) return;
-    try {
-      await axiosSecure.patch(`/admin/users/${user._id}/block`, { blocked: !user.blocked });
-      toast.success(`User ${action}ed`);
-      fetchUsers();
-    } catch (error) {
-      toast.error("Failed to update status");
+    const userName = getUserName(user);
+
+    const result = await Swal.fire({
+      title: `${user.blocked ? "Unblock" : "Block"} User?`,
+      html: `Are you sure you want to <strong>${action}</strong> <strong>${userName}</strong>?`,
+      icon: user.blocked ? "question" : "warning",
+      showCancelButton: true,
+      confirmButtonColor: user.blocked ? "#22c55e" : "#ef4444",
+      cancelButtonColor: "#598392",
+      confirmButtonText: `Yes, ${action}`,
+      cancelButtonText: "Cancel",
+      background: "#01161e",
+      color: "#eff6e0",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axiosSecure.patch(`/admin/users/${user._id}/block`, { blocked: !user.blocked });
+        toast.success(`${userName} has been ${action}ed`);
+        fetchUsers();
+      } catch (error) {
+        toast.error(error.response?.data?.message || `Failed to ${action} user`);
+      }
     }
   };
 
@@ -135,18 +183,33 @@ const AdminUsers = () => {
                         alt=""
                         className="w-10 h-10 rounded-full object-cover"
                       />
-                      <span className="text-ds-text font-medium">{getUserName(user)}</span>
+                      <div>
+                        <span className="text-ds-text font-medium flex items-center gap-2">
+                          {getUserName(user)}
+                          {user.isMasterAdmin && (
+                            <FaCrown className="w-4 h-4 text-yellow-400" title="Master Admin" />
+                          )}
+                        </span>
+                      </div>
                     </div>
                   </td>
                   <td className="py-4 px-4 text-ds-muted">{user.email}</td>
                   <td className="py-4 px-4">
-                    <span
-                      className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                        user.role === "admin" ? "bg-purple-500/20 text-purple-400" : "bg-ds-bg text-ds-muted"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
+                    {user.isMasterAdmin ? (
+                      <span className="px-2 py-1 rounded-lg text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                        Master Admin
+                      </span>
+                    ) : (
+                      <span
+                        className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                          user.role === "admin"
+                            ? "bg-purple-500/20 text-purple-400"
+                            : "bg-ds-bg text-ds-muted"
+                        }`}
+                      >
+                        {user.role}
+                      </span>
+                    )}
                   </td>
                   <td className="py-4 px-4">
                     <span
@@ -158,24 +221,34 @@ const AdminUsers = () => {
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => toggleRole(user)}
-                        className="p-2 rounded-lg bg-ds-bg/50 text-ds-muted hover:text-purple-400"
-                        title="Toggle Role"
-                      >
-                        <HiOutlineShieldCheck className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => toggleBlock(user)}
-                        className={`p-2 rounded-lg ${
-                          user.blocked ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
-                        }`}
-                        title={user.blocked ? "Unblock" : "Block"}
-                      >
-                        <HiOutlineBan className="w-5 h-5" />
-                      </button>
-                    </div>
+                    {user.isMasterAdmin ? (
+                      <span className="text-ds-muted/50 text-xs italic">Protected</span>
+                    ) : (
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => toggleRole(user)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            user.role === "admin"
+                              ? "bg-ds-bg/50 text-ds-muted hover:bg-ds-bg hover:text-ds-text"
+                              : "bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
+                          }`}
+                        >
+                          <HiOutlineShieldCheck className="w-4 h-4" />
+                          {user.role === "admin" ? "Make User" : "Make Admin"}
+                        </button>
+                        <button
+                          onClick={() => toggleBlock(user)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            user.blocked
+                              ? "bg-green-500/10 text-green-400 hover:bg-green-500/20"
+                              : "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                          }`}
+                        >
+                          <HiOutlineBan className="w-4 h-4" />
+                          {user.blocked ? "Unblock" : "Block"}
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

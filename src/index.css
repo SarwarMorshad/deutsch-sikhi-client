@@ -61,6 +61,10 @@ html {
   scroll-behavior: smooth;
 }
 
+/* * {
+  color: rgb(255, 255, 255);
+} */
+
 body {
   font-family: var(--font-inter);
   background-color: var(--color-ds-bg);

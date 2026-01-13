@@ -1,12 +1,13 @@
 import { useContext, useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
 import useLanguage from "../../hooks/useLanguage";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
+import useXP from "../../hooks/useXP";
 import axios from "axios";
+import StreakBadge from "../xp/StreakBadge";
 import {
   HiOutlineMenuAlt3,
   HiOutlineX,
@@ -28,6 +29,7 @@ import {
   HiOutlineTrendingUp,
   HiOutlineClipboardList,
   HiOutlineLockClosed,
+  HiOutlineFire,
 } from "react-icons/hi";
 
 // Desktop dropdown animation
@@ -37,27 +39,17 @@ const dropdownVariants = {
   exit: { opacity: 0, y: -10, scale: 0.95, transition: { duration: 0.15, ease: "easeIn" } },
 };
 
-// Mobile menu animations - slide from top with smooth exit
+// Mobile menu animations
 const menuVariants = {
-  hidden: { opacity: 0, y: -50, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: "spring", damping: 25, stiffness: 300 },
-  },
-  exit: {
-    opacity: 0,
-    y: -30,
-    scale: 0.95,
-    transition: { duration: 0.2, ease: "easeInOut" },
-  },
+  hidden: { opacity: 0, scale: 0.95, y: -20 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+  exit: { opacity: 0, scale: 0.95, y: -20, transition: { duration: 0.15, ease: "easeIn" } },
 };
 
 const backdropVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.2 } },
-  exit: { opacity: 0, transition: { duration: 0.25 } },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
 const Navbar = () => {
@@ -67,6 +59,7 @@ const Navbar = () => {
   const { user, logOut } = useContext(AuthContext);
   const { currentLanguage, isBengali, changeLanguage } = useLanguage();
   const axiosSecure = useAxiosSecure();
+  const { xpStatus } = useXP();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -240,13 +233,13 @@ const Navbar = () => {
 
   const userDropdownLinks = isAdmin
     ? [
-        { to: "/admin", label: t("nav.admin", "Admin Panel"), icon: HiOutlineViewGrid },
         { to: "/leaderboard", label: t("nav.leaderboard", "Leaderboard"), icon: HiOutlineTrendingUp },
+        { to: "/admin", label: t("nav.admin", "Admin Panel"), icon: HiOutlineViewGrid },
         { to: "/admin/settings", label: t("nav.settings", "Settings"), icon: HiOutlineCog },
       ]
     : [
-        { to: "/dashboard", label: t("nav.myStats", "My Stats"), icon: HiOutlineChartBar },
         { to: "/leaderboard", label: t("nav.leaderboard", "Leaderboard"), icon: HiOutlineTrendingUp },
+        { to: "/dashboard", label: t("nav.myStats", "My Stats"), icon: HiOutlineChartBar },
         { to: "/profile", label: t("nav.profile", "Profile"), icon: HiOutlineUser },
       ];
 
@@ -375,6 +368,9 @@ const Navbar = () => {
 
           {/* Desktop Right Side */}
           <div className="hidden lg:flex items-center gap-3">
+            {/* XP & Streak Badge - Only show for logged in users */}
+            {user && xpStatus && <StreakBadge xpStatus={xpStatus} onClick={() => navigate("/dashboard")} />}
+
             {!user && (
               <NavLink
                 to="/leaderboard"
@@ -508,293 +504,242 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-ds-muted hover:text-ds-text hover:bg-ds-surface transition-colors cursor-pointer"
-          >
-            {isMenuOpen ? <HiOutlineX className="w-6 h-6" /> : <HiOutlineMenuAlt3 className="w-6 h-6" />}
-          </button>
+          <div className="lg:hidden flex items-center gap-2">
+            {/* Mobile Streak Badge */}
+            {user && xpStatus && (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-ds-surface/50">
+                <HiOutlineFire
+                  className={`w-4 h-4 ${xpStatus.streak?.isActive ? "text-orange-400" : "text-ds-muted"}`}
+                />
+                <span
+                  className={`text-sm font-medium ${
+                    xpStatus.streak?.isActive ? "text-orange-400" : "text-ds-muted"
+                  }`}
+                >
+                  {xpStatus.streak?.current || 0}
+                </span>
+              </div>
+            )}
+
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-lg text-ds-muted hover:text-ds-text hover:bg-ds-surface transition-colors cursor-pointer"
+            >
+              {isMenuOpen ? <HiOutlineX className="w-6 h-6" /> : <HiOutlineMenuAlt3 className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ==================== MOBILE MENU (Facebook Style) - Using Portal ==================== */}
-      {createPortal(
-        <AnimatePresence>
-          {isMenuOpen && (
-            <div key="mobile-menu-wrapper" className="lg:hidden">
-              {/* Backdrop - full screen with blur */}
-              <motion.div
-                key="backdrop"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                onClick={() => setIsMenuOpen(false)}
-                style={{
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  width: "100vw",
-                  height: "100vh",
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  backdropFilter: "blur(4px)",
-                  WebkitBackdropFilter: "blur(4px)",
-                  zIndex: 9998,
-                  cursor: "pointer",
-                }}
-              />
+      {/* ==================== MOBILE MENU (Facebook Style) ==================== */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <div className="fixed inset-0 z-[100] lg:hidden">
+            {/* Backdrop */}
+            <motion.div
+              variants={backdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="absolute inset-0 bg-black/50 cursor-pointer"
+            />
 
-              {/* Menu Panel - Facebook Style */}
-              <motion.div
-                key="menu-panel"
-                initial={{ opacity: 0, y: -50, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -30, scale: 0.95 }}
-                transition={{
-                  type: "spring",
-                  damping: 25,
-                  stiffness: 300,
-                  exit: { duration: 0.2, ease: "easeOut" },
-                }}
-                style={{
-                  position: "fixed",
-                  top: "80px",
-                  left: "16px",
-                  right: "16px",
-                  maxWidth: "448px",
-                  margin: "0 auto",
-                  zIndex: 9999,
-                }}
-                className="bg-ds-surface rounded-2xl border border-ds-border/50 shadow-2xl max-h-[calc(100vh-100px)] overflow-y-auto"
-              >
-                {/* User Profile Card */}
-                {user ? (
-                  <div className="p-4 border-b border-ds-border/30">
-                    <Link
-                      to="/profile"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-ds-bg/50 transition-colors"
-                    >
-                      {user.photoURL ? (
-                        <img
-                          src={user.photoURL}
-                          alt=""
-                          className="w-14 h-14 rounded-full border-2 border-ds-border"
-                        />
-                      ) : (
-                        <div className="w-14 h-14 rounded-full bg-ds-bg/50 flex items-center justify-center border-2 border-ds-border">
-                          <HiOutlineUser className="w-7 h-7 text-ds-muted" />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <p className="text-ds-text font-semibold text-lg">{user.displayName || "User"}</p>
+            {/* Menu Panel - Facebook Style */}
+            <motion.div
+              variants={menuVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-16 right-4 left-4 max-w-md mx-auto bg-ds-surface rounded-2xl border border-ds-border/50 shadow-2xl max-h-[calc(100vh-100px)] overflow-y-auto"
+            >
+              {/* User Profile Card */}
+              {user ? (
+                <div className="p-4 border-b border-ds-border/30">
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-ds-bg/50 transition-colors"
+                  >
+                    {user.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt=""
+                        className="w-14 h-14 rounded-full border-2 border-ds-border"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-ds-bg/50 flex items-center justify-center border-2 border-ds-border">
+                        <HiOutlineUser className="w-7 h-7 text-ds-muted" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="text-ds-text font-semibold text-lg">{user.displayName || "User"}</p>
+                      <div className="flex items-center gap-2 mt-1">
                         {isAdmin && (
                           <span className="inline-block px-2 py-0.5 text-xs rounded bg-purple-500/20 text-purple-400">
                             Admin
                           </span>
                         )}
+                        {xpStatus && (
+                          <span className="text-xs text-ds-muted">
+                            Level {xpStatus.xp?.level || 1} • {xpStatus.xp?.total || 0} XP
+                          </span>
+                        )}
                       </div>
+                    </div>
+                  </Link>
+
+                  {/* XP Progress in Mobile Menu */}
+                  {xpStatus && (
+                    <div className="mt-3 px-3">
+                      <div className="flex justify-between text-xs text-ds-muted mb-1">
+                        <span>Daily Goal</span>
+                        <span>
+                          {xpStatus.dailyGoal?.todayXp || 0} / {xpStatus.dailyGoal?.target || 50} XP
+                        </span>
+                      </div>
+                      <div className="h-2 bg-ds-bg/50 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${xpStatus.dailyGoal?.progress || 0}%` }}
+                          className={`h-full rounded-full ${
+                            xpStatus.dailyGoal?.completed ? "bg-green-400" : "bg-purple-400"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 border-b border-ds-border/30">
+                  <div className="flex gap-2">
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex-1 py-3 text-center rounded-xl bg-ds-bg/50 text-ds-text font-medium hover:bg-ds-bg transition-colors"
+                    >
+                      {t("nav.login", "Login")}
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex-1 py-3 text-center rounded-xl bg-ds-text text-ds-bg font-medium hover:bg-ds-muted transition-colors"
+                    >
+                      {t("nav.register", "Register")}
                     </Link>
                   </div>
-                ) : (
-                  <div className="p-4 border-b border-ds-border/30">
-                    <div className="flex gap-2">
-                      <Link
-                        to="/login"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex-1 py-3 text-center rounded-xl bg-ds-bg/50 text-ds-text font-medium hover:bg-ds-bg transition-colors"
-                      >
-                        {t("nav.login", "Login")}
-                      </Link>
-                      <Link
-                        to="/register"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex-1 py-3 text-center rounded-xl bg-ds-text text-ds-bg font-medium hover:bg-ds-muted transition-colors"
-                      >
-                        {t("nav.register", "Register")}
-                      </Link>
-                    </div>
+                </div>
+              )}
+
+              {/* Menu Items */}
+              <div className="p-2">
+                {/* Home */}
+                <NavLink
+                  to="/"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-4 px-3 py-3 rounded-xl transition-colors ${
+                      isActive ? "bg-ds-border/30" : "hover:bg-ds-bg/50"
+                    }`
+                  }
+                >
+                  <div className="w-10 h-10 rounded-full bg-ds-bg/50 flex items-center justify-center">
+                    <HiOutlineHome className="w-5 h-5 text-ds-text" />
                   </div>
-                )}
+                  <span className={`text-ds-text font-medium ${isBengali ? "font-bangla" : ""}`}>
+                    {t("nav.home", "Home")}
+                  </span>
+                </NavLink>
 
-                {/* Menu Items */}
-                <div className="p-2">
-                  {/* === Section 1: Navigation (Home, Learn, Practice) === */}
-                  <NavLink
-                    to="/"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-4 px-3 py-3 rounded-xl transition-colors ${
-                        isActive ? "bg-ds-border/30" : "hover:bg-ds-bg/50"
-                      }`
-                    }
-                  >
-                    <div className="w-10 h-10 rounded-full bg-ds-bg/50 flex items-center justify-center">
-                      <HiOutlineHome className="w-5 h-5 text-ds-text" />
-                    </div>
-                    <span className={`text-ds-text font-medium ${isBengali ? "font-bangla" : ""}`}>
-                      {t("nav.home", "Home")}
-                    </span>
-                  </NavLink>
-
-                  {/* Learn */}
-                  {megaMenuItems
-                    .filter((menu) => menu.id === "learn")
-                    .map((menu) => (
-                      <div key={menu.id}>
-                        <button
-                          onClick={() => setExpandedSection(expandedSection === menu.id ? null : menu.id)}
-                          className="flex items-center justify-between w-full px-3 py-3 rounded-xl hover:bg-ds-bg/50 transition-colors cursor-pointer"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-ds-bg/50 flex items-center justify-center">
-                              <menu.icon className="w-5 h-5 text-ds-text" />
-                            </div>
-                            <span className={`text-ds-text font-medium ${isBengali ? "font-bangla" : ""}`}>
-                              {menu.label}
-                            </span>
-                          </div>
-                          <motion.div
-                            animate={{ rotate: expandedSection === menu.id ? 90 : 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <HiOutlineChevronRight className="w-5 h-5 text-ds-muted" />
-                          </motion.div>
-                        </button>
-
-                        <AnimatePresence>
-                          {expandedSection === menu.id && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="pl-14 pr-3 pb-2 space-y-1">
-                                {menu.items.map((item) => {
-                                  const isLocked = item.requiresAuth && !user;
-                                  return (
-                                    <NavLink
-                                      key={item.to}
-                                      to={isLocked ? "/login" : item.to}
-                                      onClick={(e) => {
-                                        if (isLocked) {
-                                          e.preventDefault();
-                                          navigate(`/login?redirect=${encodeURIComponent(item.to)}`);
-                                        }
-                                        setIsMenuOpen(false);
-                                      }}
-                                      className={({ isActive }) =>
-                                        `flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors ${
-                                          isActive
-                                            ? "bg-ds-border/30 text-ds-text"
-                                            : "text-ds-muted hover:text-ds-text hover:bg-ds-bg/30"
-                                        } ${isLocked ? "opacity-60" : ""}`
-                                      }
-                                    >
-                                      <span className={isBengali ? "font-bangla" : ""}>{item.label}</span>
-                                      {isLocked && <HiOutlineLockClosed className="w-4 h-4" />}
-                                    </NavLink>
-                                  );
-                                })}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                {/* Expandable Sections */}
+                {megaMenuItems.map((menu) => (
+                  <div key={menu.id}>
+                    <button
+                      onClick={() => setExpandedSection(expandedSection === menu.id ? null : menu.id)}
+                      className="flex items-center justify-between w-full px-3 py-3 rounded-xl hover:bg-ds-bg/50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-ds-bg/50 flex items-center justify-center">
+                          <menu.icon className="w-5 h-5 text-ds-text" />
+                        </div>
+                        <span className={`text-ds-text font-medium ${isBengali ? "font-bangla" : ""}`}>
+                          {menu.label}
+                        </span>
                       </div>
-                    ))}
+                      <motion.div
+                        animate={{ rotate: expandedSection === menu.id ? 90 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <HiOutlineChevronRight className="w-5 h-5 text-ds-muted" />
+                      </motion.div>
+                    </button>
 
-                  {/* Practice */}
-                  {megaMenuItems
-                    .filter((menu) => menu.id === "practice")
-                    .map((menu) => (
-                      <div key={menu.id}>
-                        <button
-                          onClick={() => setExpandedSection(expandedSection === menu.id ? null : menu.id)}
-                          className="flex items-center justify-between w-full px-3 py-3 rounded-xl hover:bg-ds-bg/50 transition-colors cursor-pointer"
+                    <AnimatePresence>
+                      {expandedSection === menu.id && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-ds-bg/50 flex items-center justify-center">
-                              <menu.icon className="w-5 h-5 text-ds-text" />
-                            </div>
-                            <span className={`text-ds-text font-medium ${isBengali ? "font-bangla" : ""}`}>
-                              {menu.label}
-                            </span>
+                          <div className="pl-14 pr-3 pb-2 space-y-1">
+                            {menu.items.map((item) => {
+                              const isLocked = item.requiresAuth && !user;
+                              return (
+                                <NavLink
+                                  key={item.to}
+                                  to={isLocked ? "/login" : item.to}
+                                  onClick={(e) => {
+                                    if (isLocked) {
+                                      e.preventDefault();
+                                      navigate(`/login?redirect=${encodeURIComponent(item.to)}`);
+                                    }
+                                    setIsMenuOpen(false);
+                                  }}
+                                  className={({ isActive }) =>
+                                    `flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors ${
+                                      isActive
+                                        ? "bg-ds-border/30 text-ds-text"
+                                        : "text-ds-muted hover:text-ds-text hover:bg-ds-bg/30"
+                                    } ${isLocked ? "opacity-60" : ""}`
+                                  }
+                                >
+                                  <span className={isBengali ? "font-bangla" : ""}>{item.label}</span>
+                                  {isLocked && <HiOutlineLockClosed className="w-4 h-4" />}
+                                </NavLink>
+                              );
+                            })}
                           </div>
-                          <motion.div
-                            animate={{ rotate: expandedSection === menu.id ? 90 : 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <HiOutlineChevronRight className="w-5 h-5 text-ds-muted" />
-                          </motion.div>
-                        </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
 
-                        <AnimatePresence>
-                          {expandedSection === menu.id && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="pl-14 pr-3 pb-2 space-y-1">
-                                {menu.items.map((item) => {
-                                  const isLocked = item.requiresAuth && !user;
-                                  return (
-                                    <NavLink
-                                      key={item.to}
-                                      to={isLocked ? "/login" : item.to}
-                                      onClick={(e) => {
-                                        if (isLocked) {
-                                          e.preventDefault();
-                                          navigate(`/login?redirect=${encodeURIComponent(item.to)}`);
-                                        }
-                                        setIsMenuOpen(false);
-                                      }}
-                                      className={({ isActive }) =>
-                                        `flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors ${
-                                          isActive
-                                            ? "bg-ds-border/30 text-ds-text"
-                                            : "text-ds-muted hover:text-ds-text hover:bg-ds-bg/30"
-                                        } ${isLocked ? "opacity-60" : ""}`
-                                      }
-                                    >
-                                      <span className={isBengali ? "font-bangla" : ""}>{item.label}</span>
-                                      {isLocked && <HiOutlineLockClosed className="w-4 h-4" />}
-                                    </NavLink>
-                                  );
-                                })}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    ))}
+                {/* Leaderboard */}
+                <NavLink
+                  to="/leaderboard"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-4 px-3 py-3 rounded-xl transition-colors ${
+                      isActive ? "bg-ds-border/30" : "hover:bg-ds-bg/50"
+                    }`
+                  }
+                >
+                  <div className="w-10 h-10 rounded-full bg-ds-bg/50 flex items-center justify-center">
+                    <HiOutlineTrendingUp className="w-5 h-5 text-ds-text" />
+                  </div>
+                  <span className={`text-ds-text font-medium ${isBengali ? "font-bangla" : ""}`}>
+                    {t("nav.leaderboard", "Leaderboard")}
+                  </span>
+                </NavLink>
 
-                  {/* === Visible Divider === */}
-                  <div className="my-3 mx-2 border-t-2 border-ds-border/50" />
-
-                  {/* === Section 2: Stats (Leaderboard, My Stats) === */}
-                  <NavLink
-                    to="/leaderboard"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-4 px-3 py-3 rounded-xl transition-colors ${
-                        isActive ? "bg-ds-border/30" : "hover:bg-ds-bg/50"
-                      }`
-                    }
-                  >
-                    <div className="w-10 h-10 rounded-full bg-ds-bg/50 flex items-center justify-center">
-                      <HiOutlineTrendingUp className="w-5 h-5 text-ds-text" />
-                    </div>
-                    <span className={`text-ds-text font-medium ${isBengali ? "font-bangla" : ""}`}>
-                      {t("nav.leaderboard", "Leaderboard")}
-                    </span>
-                  </NavLink>
-
-                  {user && !isAdmin && (
+                {/* User-specific links */}
+                {user && (
+                  <>
                     <NavLink
                       to="/dashboard"
                       onClick={() => setIsMenuOpen(false)}
@@ -811,13 +756,8 @@ const Navbar = () => {
                         {t("nav.myStats", "My Stats")}
                       </span>
                     </NavLink>
-                  )}
 
-                  {/* === Visible Divider (Admin Section) === */}
-                  {isAdmin && (
-                    <>
-                      <div className="my-3 mx-2 border-t-2 border-ds-border/50" />
-
+                    {isAdmin && (
                       <NavLink
                         to="/admin"
                         onClick={() => setIsMenuOpen(false)}
@@ -834,48 +774,48 @@ const Navbar = () => {
                           {t("nav.admin", "Admin Panel")}
                         </span>
                       </NavLink>
-                    </>
-                  )}
+                    )}
+                  </>
+                )}
 
-                  {/* === Visible Divider === */}
-                  <div className="my-3 mx-2 border-t-2 border-ds-border/50" />
+                {/* Divider */}
+                <div className="my-2 border-t border-ds-border/30" />
 
-                  {/* === Section 3: Settings (Language, Logout) === */}
-                  <button
-                    onClick={toggleLanguage}
-                    className="flex items-center justify-between w-full px-3 py-3 rounded-xl hover:bg-ds-bg/50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-ds-bg/50 flex items-center justify-center">
-                        <HiOutlineTranslate className="w-5 h-5 text-ds-text" />
-                      </div>
-                      <span className={`text-ds-text font-medium`}>
-                        {isBengali ? "Switch to English" : "বাংলায় দেখুন"}
-                      </span>
+                {/* Language Toggle */}
+                <button
+                  onClick={toggleLanguage}
+                  className="flex items-center justify-between w-full px-3 py-3 rounded-xl hover:bg-ds-bg/50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-ds-bg/50 flex items-center justify-center">
+                      <HiOutlineTranslate className="w-5 h-5 text-ds-text" />
                     </div>
-                    <HiOutlineChevronRight className="w-5 h-5 text-ds-muted" />
-                  </button>
+                    <span className={`text-ds-text font-medium`}>
+                      {isBengali ? "Switch to English" : "বাংলায় দেখুন"}
+                    </span>
+                  </div>
+                  <HiOutlineChevronRight className="w-5 h-5 text-ds-muted" />
+                </button>
 
-                  {user && (
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-4 w-full px-3 py-3 rounded-xl hover:bg-red-500/10 transition-colors cursor-pointer"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                        <HiOutlineLogout className="w-5 h-5 text-red-400" />
-                      </div>
-                      <span className={`text-red-400 font-medium ${isBengali ? "font-bangla" : ""}`}>
-                        {t("nav.logout", "Logout")}
-                      </span>
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
+                {/* Logout */}
+                {user && (
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-4 w-full px-3 py-3 rounded-xl hover:bg-red-500/10 transition-colors cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                      <HiOutlineLogout className="w-5 h-5 text-red-400" />
+                    </div>
+                    <span className={`text-red-400 font-medium ${isBengali ? "font-bangla" : ""}`}>
+                      {t("nav.logout", "Logout")}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

@@ -30,9 +30,12 @@ const AdminUsers = () => {
     }
   };
 
+  // Helper function to get user display name
+  const getUserName = (user) => user.name || user.displayName || "No Name";
+
   const toggleRole = async (user) => {
     const newRole = user.role === "admin" ? "user" : "admin";
-    if (!confirm(`Make ${user.displayName || user.email} ${newRole}?`)) return;
+    if (!confirm(`Make ${getUserName(user)} ${newRole}?`)) return;
     try {
       await axiosSecure.patch(`/admin/users/${user._id}/role`, { role: newRole });
       toast.success(`Role updated to ${newRole}`);
@@ -44,7 +47,7 @@ const AdminUsers = () => {
 
   const toggleBlock = async (user) => {
     const action = user.blocked ? "unblock" : "block";
-    if (!confirm(`${action} ${user.displayName || user.email}?`)) return;
+    if (!confirm(`${action} ${getUserName(user)}?`)) return;
     try {
       await axiosSecure.patch(`/admin/users/${user._id}/block`, { blocked: !user.blocked });
       toast.success(`User ${action}ed`);
@@ -56,7 +59,7 @@ const AdminUsers = () => {
 
   const filteredUsers = users.filter(
     (u) =>
-      u.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      getUserName(u).toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -125,14 +128,14 @@ const AdminUsers = () => {
                       <img
                         src={
                           user.photoURL ||
-                          `https://ui-avatars.com/api/?name=${
-                            user.displayName || "U"
-                          }&background=598392&color=eff6e0`
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            getUserName(user)
+                          )}&background=598392&color=eff6e0`
                         }
                         alt=""
                         className="w-10 h-10 rounded-full object-cover"
                       />
-                      <span className="text-ds-text font-medium">{user.displayName || "No Name"}</span>
+                      <span className="text-ds-text font-medium">{getUserName(user)}</span>
                     </div>
                   </td>
                   <td className="py-4 px-4 text-ds-muted">{user.email}</td>

@@ -5,9 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
 import useLanguage from "../../hooks/useLanguage";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
-import useXP from "../../hooks/useXP";
 import axios from "axios";
-import StreakBadge from "../xp/StreakBadge";
 import {
   HiOutlineMenuAlt3,
   HiOutlineX,
@@ -15,7 +13,6 @@ import {
   HiOutlineBookOpen,
   HiOutlineTranslate,
   HiOutlineLightningBolt,
-  HiOutlineLogin,
   HiOutlineLogout,
   HiOutlineUser,
   HiOutlineChartBar,
@@ -30,7 +27,11 @@ import {
   HiOutlineClipboardList,
   HiOutlineLockClosed,
   HiOutlineFire,
+  HiOutlineSparkles,
+  HiOutlineStar,
+  HiOutlineCheckCircle,
 } from "react-icons/hi";
+import { GiStairsGoal } from "react-icons/gi";
 
 // Desktop dropdown animation
 const dropdownVariants = {
@@ -52,6 +53,132 @@ const backdropVariants = {
   exit: { opacity: 0 },
 };
 
+// Streak Badge Component with Tooltips
+const StreakBadge = ({ streak, xp, dailyGoal, onClick }) => {
+  const [hoveredItem, setHoveredItem] = useState(null);
+
+  const dailyCompleted = dailyGoal && dailyGoal.todayXp >= dailyGoal.target;
+  const dailyProgress = dailyGoal ? Math.round((dailyGoal.todayXp / dailyGoal.target) * 100) : 0;
+
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-ds-surface/80 border border-ds-border/30 hover:border-purple-500/30 transition-all cursor-pointer"
+    >
+      {/* Streak */}
+      <div
+        className="relative flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-ds-bg/50 transition-colors"
+        onMouseEnter={() => setHoveredItem("streak")}
+        onMouseLeave={() => setHoveredItem(null)}
+      >
+        <HiOutlineFire className={`w-4 h-4 ${streak > 0 ? "text-orange-400" : "text-ds-muted"}`} />
+        <span className={`text-sm font-bold ${streak > 0 ? "text-orange-400" : "text-ds-muted"}`}>
+          {streak}
+        </span>
+
+        {/* Streak Tooltip */}
+        <AnimatePresence>
+          {hoveredItem === "streak" && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-ds-bg border border-ds-border/50 rounded-lg shadow-xl z-50 whitespace-nowrap"
+            >
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-ds-bg border-l border-t border-ds-border/50 rotate-45" />
+              <p className="text-xs font-medium text-ds-text">🔥 Day Streak</p>
+              <p className="text-[10px] text-ds-muted mt-0.5">{streak} days in a row!</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-5 bg-ds-border/30" />
+
+      {/* XP */}
+      <div
+        className="relative flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-ds-bg/50 transition-colors"
+        onMouseEnter={() => setHoveredItem("xp")}
+        onMouseLeave={() => setHoveredItem(null)}
+      >
+        <HiOutlineStar className="w-4 h-4 text-yellow-400" />
+        <span className="text-sm font-bold text-yellow-400">
+          {xp >= 1000 ? `${(xp / 1000).toFixed(1)}k` : xp}
+        </span>
+
+        {/* XP Tooltip */}
+        <AnimatePresence>
+          {hoveredItem === "xp" && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-ds-bg border border-ds-border/50 rounded-lg shadow-xl z-50 whitespace-nowrap"
+            >
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-ds-bg border-l border-t border-ds-border/50 rotate-45" />
+              <p className="text-xs font-medium text-ds-text">⭐ Total XP</p>
+              <p className="text-[10px] text-ds-muted mt-0.5">{xp.toLocaleString()} experience points</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-5 bg-ds-border/30" />
+
+      {/* Daily Goal */}
+      {dailyGoal && (
+        <div
+          className="relative flex items-center gap-1.5 px-2 py-0.5 rounded-lg hover:bg-ds-bg/50 transition-colors"
+          onMouseEnter={() => setHoveredItem("daily")}
+          onMouseLeave={() => setHoveredItem(null)}
+        >
+          {dailyCompleted ? (
+            <HiOutlineCheckCircle className="w-4 h-4 text-green-400" />
+          ) : (
+            <GiStairsGoal className="w-4 h-4 text-purple-400" />
+          )}
+          <span className={`text-sm font-bold ${dailyCompleted ? "text-green-400" : "text-purple-400"}`}>
+            {dailyProgress}%
+          </span>
+
+          {/* Daily Goal Tooltip */}
+          <AnimatePresence>
+            {hoveredItem === "daily" && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 5 }}
+                className="absolute top-full right-0 mt-2 px-3 py-2 bg-ds-bg border border-ds-border/50 rounded-lg shadow-xl z-50 whitespace-nowrap"
+              >
+                <div className="absolute -top-1 right-4 w-2 h-2 bg-ds-bg border-l border-t border-ds-border/50 rotate-45" />
+                <p className="text-xs font-medium text-ds-text">
+                  {dailyCompleted ? "✅ Daily Goal Complete!" : "✨ Daily Goal"}
+                </p>
+                <p className="text-[10px] text-ds-muted mt-0.5">
+                  {dailyGoal.todayXp} / {dailyGoal.target} XP today
+                </p>
+                {/* Mini progress bar */}
+                <div className="w-24 h-1.5 bg-ds-border/30 rounded-full mt-1.5 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      dailyCompleted ? "bg-green-400" : "bg-purple-400"
+                    }`}
+                    style={{ width: `${Math.min(dailyProgress, 100)}%` }}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+    </motion.button>
+  );
+};
+
 const Navbar = () => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -59,18 +186,19 @@ const Navbar = () => {
   const { user, logOut } = useContext(AuthContext);
   const { currentLanguage, isBengali, changeLanguage } = useLanguage();
   const axiosSecure = useAxiosSecure();
-  const { xpStatus } = useXP();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [expandedSection, setExpandedSection] = useState(null);
+  const [userData, setUserData] = useState(null);
   const dropdownTimeoutRef = useRef(null);
 
-  // Check admin role
+  // Fetch user data including XP from /users/me
   useEffect(() => {
-    const checkAdminRole = async () => {
+    const fetchUserData = async () => {
       if (!user) {
+        setUserData(null);
         setIsAdmin(false);
         return;
       }
@@ -79,12 +207,16 @@ const Navbar = () => {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setIsAdmin(response.data.data?.role === "admin");
+        const data = response.data.data;
+        setUserData(data);
+        setIsAdmin(data?.role === "admin");
       } catch (error) {
+        console.error("Error fetching user data:", error);
+        setUserData(null);
         setIsAdmin(false);
       }
     };
-    checkAdminRole();
+    fetchUserData();
   }, [user]);
 
   // Close everything on route change
@@ -131,6 +263,7 @@ const Navbar = () => {
       await logOut();
       setIsMenuOpen(false);
       setIsAdmin(false);
+      setUserData(null);
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
@@ -368,8 +501,15 @@ const Navbar = () => {
 
           {/* Desktop Right Side */}
           <div className="hidden lg:flex items-center gap-3">
-            {/* XP & Streak Badge - Only show for logged in users */}
-            {user && xpStatus && <StreakBadge xpStatus={xpStatus} onClick={() => navigate("/dashboard")} />}
+            {/* XP & Streak Badge - From userData */}
+            {user && userData?.xp && (
+              <StreakBadge
+                streak={userData.streak?.current || 0}
+                xp={userData.xp?.total || 0}
+                dailyGoal={userData.dailyGoal}
+                onClick={() => navigate("/dashboard")}
+              />
+            )}
 
             {!user && (
               <NavLink
@@ -506,19 +646,29 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center gap-2">
             {/* Mobile Streak Badge */}
-            {user && xpStatus && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-ds-surface/50">
+            {user && userData?.xp && (
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-ds-surface/50 border border-ds-border/30"
+              >
                 <HiOutlineFire
-                  className={`w-4 h-4 ${xpStatus.streak?.isActive ? "text-orange-400" : "text-ds-muted"}`}
+                  className={`w-4 h-4 ${userData.streak?.current > 0 ? "text-orange-400" : "text-ds-muted"}`}
                 />
                 <span
-                  className={`text-sm font-medium ${
-                    xpStatus.streak?.isActive ? "text-orange-400" : "text-ds-muted"
+                  className={`text-sm font-bold ${
+                    userData.streak?.current > 0 ? "text-orange-400" : "text-ds-muted"
                   }`}
                 >
-                  {xpStatus.streak?.current || 0}
+                  {userData.streak?.current || 0}
                 </span>
-              </div>
+                <div className="w-px h-3 bg-ds-border/50" />
+                <GiStairsGoal className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-bold text-purple-400">
+                  {userData.xp?.total >= 1000
+                    ? `${(userData.xp.total / 1000).toFixed(1)}k`
+                    : userData.xp?.total || 0}
+                </span>
+              </button>
             )}
 
             <button
@@ -531,7 +681,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ==================== MOBILE MENU (Facebook Style) ==================== */}
+      {/* ==================== MOBILE MENU ==================== */}
       <AnimatePresence>
         {isMenuOpen && (
           <div className="fixed inset-0 z-[100] lg:hidden">
@@ -546,7 +696,7 @@ const Navbar = () => {
               className="absolute inset-0 bg-black/50 cursor-pointer"
             />
 
-            {/* Menu Panel - Facebook Style */}
+            {/* Menu Panel */}
             <motion.div
               variants={menuVariants}
               initial="hidden"
@@ -582,9 +732,9 @@ const Navbar = () => {
                             Admin
                           </span>
                         )}
-                        {xpStatus && (
+                        {userData?.xp && (
                           <span className="text-xs text-ds-muted">
-                            Level {xpStatus.xp?.level || 1} • {xpStatus.xp?.total || 0} XP
+                            Level {userData.xp?.level || 1} • {userData.xp?.total || 0} XP
                           </span>
                         )}
                       </div>
@@ -592,20 +742,27 @@ const Navbar = () => {
                   </Link>
 
                   {/* XP Progress in Mobile Menu */}
-                  {xpStatus && (
+                  {userData?.dailyGoal && (
                     <div className="mt-3 px-3">
                       <div className="flex justify-between text-xs text-ds-muted mb-1">
                         <span>Daily Goal</span>
                         <span>
-                          {xpStatus.dailyGoal?.todayXp || 0} / {xpStatus.dailyGoal?.target || 50} XP
+                          {userData.dailyGoal?.todayXp || 0} / {userData.dailyGoal?.target || 50} XP
                         </span>
                       </div>
                       <div className="h-2 bg-ds-bg/50 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: `${xpStatus.dailyGoal?.progress || 0}%` }}
+                          animate={{
+                            width: `${Math.min(
+                              ((userData.dailyGoal?.todayXp || 0) / (userData.dailyGoal?.target || 50)) * 100,
+                              100
+                            )}%`,
+                          }}
                           className={`h-full rounded-full ${
-                            xpStatus.dailyGoal?.completed ? "bg-green-400" : "bg-purple-400"
+                            (userData.dailyGoal?.todayXp || 0) >= (userData.dailyGoal?.target || 50)
+                              ? "bg-green-400"
+                              : "bg-purple-400"
                           }`}
                         />
                       </div>

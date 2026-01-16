@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { useState, useMemo, useContext } from "react";
-import { HiOutlineLockClosed, HiOutlineCheckCircle, HiOutlineGift } from "react-icons/hi";
+import { useState, useMemo, useContext, useRef } from "react";
+import { HiOutlineLockClosed, HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi";
 import { HiOutlineTrophy } from "react-icons/hi2";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
@@ -11,6 +11,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
   const { user } = useContext(AuthContext);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [claimingId, setClaimingId] = useState(null);
+  const scrollRef = useRef(null);
 
   // Achievement definitions
   const achievementDefinitions = {
@@ -22,6 +23,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Earn 1,000 XP",
         requirement: 1000,
         reward: 50,
+        color: "from-orange-600 to-orange-800",
       },
       {
         id: "silver_learner",
@@ -30,6 +32,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Earn 5,000 XP",
         requirement: 5000,
         reward: 100,
+        color: "from-gray-400 to-gray-600",
       },
       {
         id: "gold_learner",
@@ -38,6 +41,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Earn 10,000 XP",
         requirement: 10000,
         reward: 200,
+        color: "from-yellow-400 to-yellow-600",
       },
       {
         id: "platinum_learner",
@@ -46,6 +50,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Earn 25,000 XP",
         requirement: 25000,
         reward: 500,
+        color: "from-cyan-400 to-cyan-600",
       },
       {
         id: "legendary_learner",
@@ -54,6 +59,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Earn 50,000 XP",
         requirement: 50000,
         reward: 1000,
+        color: "from-purple-500 to-pink-500",
       },
     ],
     streakMilestones: [
@@ -64,6 +70,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "7-day streak",
         requirement: 7,
         reward: 50,
+        color: "from-orange-500 to-red-600",
       },
       {
         id: "fortnight_fighter",
@@ -72,6 +79,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "14-day streak",
         requirement: 14,
         reward: 100,
+        color: "from-yellow-500 to-orange-500",
       },
       {
         id: "monthly_master",
@@ -80,6 +88,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "30-day streak",
         requirement: 30,
         reward: 200,
+        color: "from-blue-500 to-purple-500",
       },
       {
         id: "streak_legend",
@@ -88,6 +97,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "100-day streak",
         requirement: 100,
         reward: 1000,
+        color: "from-purple-500 to-pink-600",
       },
     ],
     lessonMilestones: [
@@ -98,6 +108,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Complete 10 lessons",
         requirement: 10,
         reward: 50,
+        color: "from-green-500 to-emerald-600",
       },
       {
         id: "student",
@@ -106,6 +117,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Complete 50 lessons",
         requirement: 50,
         reward: 100,
+        color: "from-blue-500 to-indigo-600",
       },
       {
         id: "scholar",
@@ -114,6 +126,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Complete 100 lessons",
         requirement: 100,
         reward: 200,
+        color: "from-purple-500 to-violet-600",
       },
       {
         id: "professor",
@@ -122,6 +135,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Complete 250 lessons",
         requirement: 250,
         reward: 500,
+        color: "from-red-500 to-rose-600",
       },
     ],
     vocabularyMilestones: [
@@ -132,6 +146,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Learn 100 words",
         requirement: 100,
         reward: 50,
+        color: "from-teal-500 to-cyan-600",
       },
       {
         id: "vocabulary_builder",
@@ -140,6 +155,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Learn 500 words",
         requirement: 500,
         reward: 100,
+        color: "from-blue-500 to-sky-600",
       },
       {
         id: "word_master",
@@ -148,6 +164,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Learn 1,000 words",
         requirement: 1000,
         reward: 200,
+        color: "from-indigo-500 to-blue-600",
       },
       {
         id: "polyglot",
@@ -156,6 +173,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Learn 2,500 words",
         requirement: 2500,
         reward: 500,
+        color: "from-violet-500 to-purple-600",
       },
     ],
     levelMilestones: [
@@ -166,6 +184,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Reach Level 5",
         requirement: 5,
         reward: 50,
+        color: "from-emerald-500 to-green-600",
       },
       {
         id: "level_10",
@@ -174,6 +193,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Reach Level 10",
         requirement: 10,
         reward: 100,
+        color: "from-cyan-500 to-blue-600",
       },
       {
         id: "level_25",
@@ -182,6 +202,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Reach Level 25",
         requirement: 25,
         reward: 250,
+        color: "from-purple-500 to-pink-600",
       },
       {
         id: "level_50",
@@ -190,6 +211,7 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         description: "Reach Level 50",
         requirement: 50,
         reward: 500,
+        color: "from-yellow-500 to-orange-600",
       },
     ],
   };
@@ -267,6 +289,16 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
     return Object.values(achievements)
       .flat()
       .filter((a) => a.unlocked && !a.claimed).length;
+  };
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 300;
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
   };
 
   const triggerConfetti = () => {
@@ -375,13 +407,13 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
         </div>
       </div>
 
-      {/* Category Tabs - Compact */}
+      {/* Category Tabs */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
         {categories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-all ${
               selectedCategory === cat.id
                 ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
                 : "bg-ds-surface/50 text-ds-muted hover:text-ds-text hover:bg-ds-surface"
@@ -395,158 +427,163 @@ const AchievementsSection = ({ userData, onAchievementClaimed }) => {
 
       {/* Achievements Horizontal Scroll */}
       <div className="relative">
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
-          {displayAchievements.map((achievement, index) => (
-            <AchievementCard
-              key={achievement.id}
-              achievement={achievement}
-              index={index}
-              onClaimReward={handleClaimReward}
-              isClaiming={claimingId === achievement.id}
-            />
-          ))}
+        {/* Left Arrow Button */}
+        <button
+          onClick={() => scroll("left")}
+          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-ds-bg/90 hover:bg-ds-surface border border-ds-border/50 items-center justify-center transition-all shadow-lg hover:scale-110"
+        >
+          <HiOutlineChevronLeft className="w-6 h-6 text-ds-text" />
+        </button>
+
+        {/* Right Arrow Button */}
+        <button
+          onClick={() => scroll("right")}
+          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-ds-bg/90 hover:bg-ds-surface border border-ds-border/50 items-center justify-center transition-all shadow-lg hover:scale-110"
+        >
+          <HiOutlineChevronRight className="w-6 h-6 text-ds-text" />
+        </button>
+
+        {/* Scroll Container */}
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto overflow-y-hidden pb-4 px-12 md:px-14"
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          <div className="flex gap-4" style={{ width: "max-content" }}>
+            {displayAchievements.map((achievement, index) => (
+              <BadgeCard
+                key={achievement.id}
+                achievement={achievement}
+                index={index}
+                onClaimReward={handleClaimReward}
+                isClaiming={claimingId === achievement.id}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       {/* CSS for hiding scrollbar */}
       <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
+        .overflow-x-auto::-webkit-scrollbar {
           display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
         }
       `}</style>
     </div>
   );
 };
 
-const AchievementCard = ({ achievement, index, onClaimReward, isClaiming }) => {
-  const { id, name, icon, description, requirement, reward, unlocked, claimed, progress } = achievement;
+const BadgeCard = ({ achievement, index, onClaimReward, isClaiming }) => {
+  const { id, name, icon, description, requirement, reward, unlocked, claimed, progress, color } =
+    achievement;
   const progressPercent = Math.min((progress / requirement) * 100, 100);
   const canClaim = unlocked && !claimed;
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.05 }}
-      className={`relative flex-shrink-0 w-72 rounded-2xl border transition-all snap-start ${
-        unlocked
-          ? "bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-purple-500/10 border-yellow-500/30 shadow-lg shadow-yellow-500/10"
-          : "bg-ds-surface/30 border-ds-border/30"
-      }`}
+      className="flex-shrink-0 w-56"
     >
-      {/* Card Content */}
-      <div className="p-5">
-        {/* Icon & Badge */}
-        <div className="flex items-start justify-between mb-4">
-          <div className={`text-5xl transition-all ${unlocked ? "scale-110" : "grayscale opacity-40"}`}>
-            {icon}
-          </div>
-
-          {unlocked && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full ${
-                claimed ? "bg-green-500/20 text-green-400" : "bg-orange-500/20 text-orange-400 animate-pulse"
-              }`}
-            >
-              {claimed ? (
-                <>
-                  <HiOutlineCheckCircle className="w-4 h-4" />
-                  <span className="text-xs font-bold">Claimed</span>
-                </>
-              ) : (
-                <>
-                  <HiOutlineGift className="w-4 h-4" />
-                  <span className="text-xs font-bold">Ready!</span>
-                </>
-              )}
-            </motion.div>
-          )}
-
-          {/* Locked overlay */}
-          {!unlocked && (
-            <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-ds-bg/80 backdrop-blur-sm flex items-center justify-center">
-              <HiOutlineLockClosed className="w-5 h-5 text-ds-muted/50" />
-            </div>
-          )}
-        </div>
-
-        {/* Name & Description */}
-        <div className="mb-4">
-          <h3 className={`text-lg font-bold mb-1 ${unlocked ? "text-ds-text" : "text-ds-muted"}`}>{name}</h3>
-          <p className="text-ds-muted text-sm">{description}</p>
-        </div>
-
-        {/* Progress Bar (for locked achievements) */}
-        {!unlocked && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-ds-muted font-medium">Progress</span>
-              <span className="text-ds-text font-bold">
-                {progress.toLocaleString()} / {requirement.toLocaleString()}
-              </span>
-            </div>
-            <div className="h-2 bg-ds-border/30 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 rounded-full relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-              </motion.div>
-            </div>
-            <div className="text-right mt-1">
-              <span className="text-xs text-purple-400 font-bold">{progressPercent.toFixed(0)}%</span>
-            </div>
-          </div>
-        )}
-
-        {/* Reward & Action */}
-        <div className={`pt-4 border-t ${unlocked ? "border-yellow-500/20" : "border-ds-border/20"}`}>
-          {canClaim ? (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onClaimReward(achievement)}
-              disabled={isClaiming}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold text-sm hover:from-yellow-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-yellow-500/30 flex items-center justify-center gap-2"
-            >
-              {isClaiming ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Claiming...</span>
-                </>
-              ) : (
-                <>
-                  <HiOutlineGift className="w-5 h-5" />
-                  <span>Claim +{reward} XP</span>
-                </>
-              )}
-            </motion.button>
-          ) : (
-            <div className="flex items-center justify-between">
-              <span className="text-ds-muted text-sm font-medium">Reward</span>
-              <div className="flex items-center gap-1.5">
-                <span className={`text-lg font-bold ${unlocked ? "text-yellow-400" : "text-ds-muted"}`}>
-                  +{reward}
-                </span>
-                <span className={`text-sm ${unlocked ? "text-yellow-400/70" : "text-ds-muted"}`}>XP</span>
+      {/* Badge Shield */}
+      <div className="relative">
+        {/* Shield Background */}
+        <div
+          className={`relative rounded-t-3xl rounded-b-lg overflow-hidden ${
+            unlocked ? `bg-gradient-to-b ${color}` : "bg-gradient-to-b from-gray-700 to-gray-800"
+          } ${!unlocked && "opacity-40"}`}
+        >
+          {/* Top Section - Icon */}
+          <div className="relative h-32 flex items-center justify-center">
+            {/* Lock Icon for Locked */}
+            {!unlocked && (
+              <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                <HiOutlineLockClosed className="w-4 h-4 text-white/60" />
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Ready Badge */}
+            {canClaim && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute top-3 right-3 px-2 py-1 rounded-full bg-orange-500 text-white text-xs font-bold animate-pulse"
+              >
+                🎁 Ready!
+              </motion.div>
+            )}
+
+            {/* Achievement Icon */}
+            <div className={`text-6xl ${!unlocked && "grayscale"}`}>{icon}</div>
+          </div>
+
+          {/* Bottom Dark Section */}
+          <div className="bg-black/40 backdrop-blur-sm p-4">
+            <h3 className="text-white font-bold text-center mb-1">{name}</h3>
+            <p className="text-white/70 text-xs text-center mb-3">{description}</p>
+
+            {/* Progress Bar (for locked) */}
+            {!unlocked && (
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs text-white/70 mb-1">
+                  <span>Progress</span>
+                  <span className="font-bold text-white">
+                    {progress.toLocaleString()} / {requirement.toLocaleString()}
+                  </span>
+                </div>
+                <div className="h-2 bg-black/40 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 0.8 }}
+                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+                  />
+                </div>
+                <div className="text-right mt-1">
+                  <span className="text-xs text-purple-300 font-bold">{progressPercent.toFixed(0)}%</span>
+                </div>
+              </div>
+            )}
+
+            {/* Claim Button or Reward Display */}
+            {canClaim ? (
+              <button
+                onClick={() => onClaimReward(achievement)}
+                disabled={isClaiming}
+                className="w-full py-2.5 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold text-sm hover:from-yellow-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
+              >
+                {isClaiming ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Claiming...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Claim +{reward} XP</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="text-center py-2 border-t border-white/20">
+                <div className="text-white/60 text-xs mb-1">Reward</div>
+                <div
+                  className={`font-bold ${
+                    claimed ? "text-green-400" : unlocked ? "text-yellow-400" : "text-white/40"
+                  }`}
+                >
+                  +{reward} XP
+                  {claimed && " ✓"}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Shine effect for unlocked */}
-      {unlocked && (
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer pointer-events-none rounded-2xl" />
-      )}
     </motion.div>
   );
 };

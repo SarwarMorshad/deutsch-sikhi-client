@@ -2,6 +2,7 @@ import { useState, useCallback, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import toast from "react-hot-toast";
+import confetti from "canvas-confetti";
 
 /**
  * Hook for managing achievement notifications
@@ -20,12 +21,76 @@ const useAchievementNotifications = () => {
   const [notifications, setNotifications] = useState([]);
 
   /**
+   * Trigger confetti animation
+   */
+  const triggerConfetti = useCallback(() => {
+    const duration = 2500;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function () {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      });
+    }, 250);
+  }, []);
+
+  /**
    * Show achievement unlock notification
    * @param {Object} achievement - The unlocked achievement
    */
-  const showAchievementNotification = useCallback((achievement) => {
-    setNotifications((prev) => [...prev, achievement]);
-  }, []);
+  const showAchievementNotification = useCallback(
+    (achievement) => {
+      // Add to notifications state
+      setNotifications((prev) => [...prev, achievement]);
+
+      // Trigger confetti
+      triggerConfetti();
+
+      // Show toast notification
+      toast.success(
+        <div className="flex items-center gap-3">
+          <span className="text-4xl">{achievement.icon}</span>
+          <div>
+            <p className="font-bold text-ds-text">Achievement Unlocked!</p>
+            <p className="text-sm text-ds-muted">{achievement.name}</p>
+            <p className="text-xs text-orange-400">+{achievement.reward} XP reward available!</p>
+          </div>
+        </div>,
+        {
+          duration: 5000,
+          position: "top-center",
+          style: {
+            background: "linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(249, 115, 22, 0.15) 100%)",
+            border: "2px solid rgba(234, 179, 8, 0.4)",
+            padding: "16px",
+            borderRadius: "12px",
+            minWidth: "320px",
+          },
+        }
+      );
+    },
+    [triggerConfetti]
+  );
 
   /**
    * Remove notification

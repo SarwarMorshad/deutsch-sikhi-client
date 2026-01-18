@@ -22,12 +22,17 @@ const AdminVocabulary = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingWord, setEditingWord] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState("");
-  const [selectedLesson, setSelectedLesson] = useState("all"); // "all" means no lesson filter
+  const [selectedLesson, setSelectedLesson] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Audio management states
+  const [audioStats, setAudioStats] = useState(null);
+  const [fetchingAudio, setFetchingAudio] = useState(null);
+  const [bulkFetching, setBulkFetching] = useState(false);
 
   const [formData, setFormData] = useState({
     levelId: "",
-    lessonId: "", // Optional - can be empty
+    lessonId: "",
     word_de: "",
     article: "",
     partOfSpeech: "noun",
@@ -40,12 +45,15 @@ const AdminVocabulary = () => {
   useEffect(() => {
     fetchLevels();
   }, []);
+
   useEffect(() => {
     if (selectedLevel) {
       fetchLessons();
       fetchWords();
+      fetchAudioStats();
     }
   }, [selectedLevel]);
+
   useEffect(() => {
     if (selectedLevel) fetchWords();
   }, [selectedLesson]);
@@ -83,6 +91,71 @@ const AdminVocabulary = () => {
       setWords(res.data.data);
     } catch (error) {
       toast.error("Failed to load words");
+    }
+  };
+
+  const fetchAudioStats = async () => {
+    try {
+      const res = await axiosSecure.get(`/audio/stats?level=${selectedLevel}`);
+      setAudioStats(res.data.data);
+    } catch (error) {
+      console.error("Failed to load audio stats");
+    }
+  };
+
+  const handleFetchAudio = async (word) => {
+    setFetchingAudio(word._id);
+    try {
+      const res = await axiosSecure.post(`/audio/fetch/${word._id}`);
+      toast.success(res.data.message);
+      fetchWords();
+      fetchAudioStats();
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to fetch audio";
+      toast.error(message);
+    } finally {
+      setFetchingAudio(null);
+    }
+  };
+
+  const handleBulkFetchAudio = async () => {
+    const wordsWithoutAudio = filteredWords.filter((w) => !w.audio?.url);
+
+    if (wordsWithoutAudio.length === 0) {
+      toast("All words already have audio!", { icon: "✅" });
+      return;
+    }
+
+    if (!confirm(`Fetch audio for ${wordsWithoutAudio.length} words? This may take a few minutes.`)) {
+      return;
+    }
+
+    setBulkFetching(true);
+    try {
+      const wordIds = wordsWithoutAudio.map((w) => w._id);
+      const res = await axiosSecure.post("/audio/fetch-batch", { wordIds });
+
+      toast.success(`Audio fetched! Success: ${res.data.data.success}, Failed: ${res.data.data.failed}`);
+
+      fetchWords();
+      fetchAudioStats();
+    } catch (error) {
+      toast.error("Bulk fetch failed");
+    } finally {
+      setBulkFetching(false);
+    }
+  };
+
+  const handleDeleteAudio = async (word) => {
+    if (!confirm(`Remove audio for "${word.word_de}"?`)) return;
+
+    try {
+      await axiosSecure.delete(`/audio/${word._id}`);
+      toast.success("Audio removed");
+      fetchWords();
+      fetchAudioStats();
+    } catch (error) {
+      toast.error("Failed to delete audio");
     }
   };
 
@@ -127,7 +200,7 @@ const AdminVocabulary = () => {
 
     const payload = {
       ...formData,
-      lessonId: formData.lessonId || null, // Send null if no lesson selected
+      lessonId: formData.lessonId || null,
     };
 
     try {
@@ -140,6 +213,7 @@ const AdminVocabulary = () => {
       }
       closeModal();
       fetchWords();
+      fetchAudioStats();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to save");
     }
@@ -151,6 +225,7 @@ const AdminVocabulary = () => {
       await axiosSecure.delete(`/admin/words/${word._id}`);
       toast.success("Deleted");
       fetchWords();
+      fetchAudioStats();
     } catch (error) {
       toast.error("Failed to delete");
     }
@@ -166,6 +241,14 @@ const AdminVocabulary = () => {
     }
   };
 
+  const playWiktionaryAudio = (audioUrl) => {
+    const audio = new Audio(audioUrl);
+    audio.play().catch((err) => {
+      console.error("Audio playback error:", err);
+      toast.error("Failed to play audio");
+    });
+  };
+
   const getLessonTitle = (lessonId) => {
     const lesson = lessons.find((l) => l._id === lessonId);
     return lesson ? `${lesson.order}. ${lesson.title?.en}` : null;
@@ -174,7 +257,7 @@ const AdminVocabulary = () => {
   const filteredWords = words.filter(
     (w) =>
       w.word_de?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      w.meaning_en?.toLowerCase().includes(searchQuery.toLowerCase())
+      w.meaning_en?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const partOfSpeechOptions = [
@@ -189,6 +272,7 @@ const AdminVocabulary = () => {
     "phrase",
     "number",
   ];
+
   const articleOptions = [
     { value: "", label: "None" },
     { value: "der", label: "der (masculine)" },
@@ -207,19 +291,60 @@ const AdminVocabulary = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-ds-text">Vocabulary Management</h1>
-          <p className="text-ds-muted">Add and manage words by level. Optionally link to lessons.</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-ds-text">Vocabulary Management</h1>
+            <p className="text-ds-muted">Add and manage words by level. Optionally link to lessons.</p>
+          </div>
+          <button
+            onClick={() => openModal()}
+            disabled={!selectedLevel}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-ds-text text-ds-bg font-semibold disabled:opacity-50"
+          >
+            <HiOutlinePlus className="w-5 h-5" />
+            Add Word
+          </button>
         </div>
-        <button
-          onClick={() => openModal()}
-          disabled={!selectedLevel}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-ds-text text-ds-bg font-semibold disabled:opacity-50"
-        >
-          <HiOutlinePlus className="w-5 h-5" />
-          Add Word
-        </button>
+
+        {/* Audio Stats Card */}
+        {audioStats && (
+          <div className="p-4 rounded-xl bg-ds-surface/30 border border-ds-border/30">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-6">
+                <div>
+                  <p className="text-ds-muted text-sm">Audio Coverage</p>
+                  <p className="text-2xl font-bold text-ds-text">{audioStats.coveragePercentage}%</p>
+                </div>
+                <div>
+                  <p className="text-ds-muted text-sm">With Audio</p>
+                  <p className="text-lg font-semibold text-green-400">{audioStats.withAudio}</p>
+                </div>
+                <div>
+                  <p className="text-ds-muted text-sm">Missing Audio</p>
+                  <p className="text-lg font-semibold text-orange-400">{audioStats.withoutAudio}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleBulkFetchAudio}
+                disabled={bulkFetching || audioStats.withoutAudio === 0}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500 text-white font-semibold hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {bulkFetching ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Fetching...
+                  </>
+                ) : (
+                  <>
+                    <HiOutlineVolumeUp className="w-5 h-5" />
+                    Fetch All Audio ({audioStats.withoutAudio})
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -243,7 +368,7 @@ const AdminVocabulary = () => {
             ))}
           </select>
 
-          {/* Lesson Filter (Optional) */}
+          {/* Lesson Filter */}
           <select
             value={selectedLesson}
             onChange={(e) => setSelectedLesson(e.target.value)}
@@ -283,7 +408,7 @@ const AdminVocabulary = () => {
             key={word._id}
             className="p-4 rounded-xl bg-ds-surface/30 border border-ds-border/30 hover:border-ds-border transition-colors"
           >
-            {/* Header */}
+            {/* Header with Audio Indicator */}
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2 flex-wrap">
                 {word.article && (
@@ -292,13 +417,48 @@ const AdminVocabulary = () => {
                   </span>
                 )}
                 <span className="text-xs text-ds-border capitalize">{word.partOfSpeech}</span>
+
+                {/* Audio Indicator */}
+                {word.audio?.url && (
+                  <span className="text-xs px-2 py-0.5 rounded-lg bg-green-500/20 text-green-400 flex items-center gap-1">
+                    <HiOutlineVolumeUp className="w-3 h-3" />
+                    Audio
+                  </span>
+                )}
               </div>
-              <button
-                onClick={() => speakGerman(word.word_de)}
-                className="p-1 rounded hover:bg-ds-bg text-ds-muted hover:text-ds-text"
-              >
-                <HiOutlineVolumeUp className="w-4 h-4" />
-              </button>
+
+              {/* Audio Action Buttons */}
+              {word.audio?.url ? (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => playWiktionaryAudio(word.audio.url)}
+                    className="p-1 rounded hover:bg-ds-bg text-green-400 hover:text-green-300 transition-colors"
+                    title="Play Wiktionary audio"
+                  >
+                    <HiOutlineVolumeUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteAudio(word)}
+                    className="p-1 rounded hover:bg-ds-bg text-red-400 hover:text-red-300 transition-colors"
+                    title="Delete audio"
+                  >
+                    <HiOutlineX className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleFetchAudio(word)}
+                  disabled={fetchingAudio === word._id}
+                  className="p-1 rounded hover:bg-ds-bg text-ds-muted hover:text-purple-400 disabled:opacity-50 transition-colors"
+                  title="Fetch audio from Wiktionary"
+                >
+                  {fetchingAudio === word._id ? (
+                    <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <HiOutlineVolumeUp className="w-4 h-4" />
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Word */}
@@ -360,7 +520,7 @@ const AdminVocabulary = () => {
 
             {/* Modal Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* Level (Required) */}
+              {/* Level */}
               <div>
                 <label className="block text-sm font-medium text-ds-text mb-1">Level *</label>
                 <select
@@ -377,7 +537,7 @@ const AdminVocabulary = () => {
                 </select>
               </div>
 
-              {/* Lesson (Optional) */}
+              {/* Lesson */}
               <div>
                 <label className="block text-sm font-medium text-ds-text mb-1">
                   Link to Lesson <span className="text-ds-muted">(optional)</span>
